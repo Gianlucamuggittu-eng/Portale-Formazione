@@ -6,6 +6,7 @@
   <title>Piattaforma E-Learning con Google Sheets</title>
   <script src="https://cdn.tailwindcss.com/3.3.0"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
         body {
             box-sizing: border-box;
@@ -67,16 +68,16 @@
    </div>
   </div><!-- ⚠️ CONFIGURAZIONE GOOGLE SHEETS - INSERISCI IL TUO URL QUI! -->
   <script>
-        // 🔧 CONFIGURAZIONE - MODIFICA QUESTO URL CON IL TUO!
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbybTzbpw9powPkFd3hy4uCu-f8WgGxCOLOlGmj2Ewq3ijWb5lU50AY1oByXLp1VMG84-w/exec';
+        // 🔧 CONFIGURAZIONE GOOGLE SHEETS - MODIFICA QUESTO URL CON IL TUO!
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/TUO_ID_SHEETS_QUI/exec';
         
-        // ⚠️ ISTRUZIONI:
+        // ⚠️ ISTRUZIONI GOOGLE SHEETS:
         // 1. Vai su Google Sheets e crea il foglio con Apps Script
         // 2. Pubblica come Web App e copia l'URL
         // 3. Sostituisci 'TUO_ID_SHEETS_QUI' con il tuo URL completo
         // 4. Esempio: 'https://script.google.com/macros/s/AKfycbxXXXXXXXXXX/exec'
         
-        // Verifica configurazione
+        // Verifica configurazioni
         if (GOOGLE_SHEETS_URL.includes('TUO_ID_SHEETS_QUI')) {
             console.warn('⚠️ ATTENZIONE: Configura il GOOGLE_SHEETS_URL con il tuo URL di Google Sheets!');
         }
@@ -85,7 +86,7 @@
    <div class="max-w-7xl mx-auto px-4">
     <div class="flex justify-between items-center py-4">
      <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">📚</span>
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">����</span>
       </div>
       <h1 class="text-2xl font-bold text-gray-800">EduPlatform <span class="text-sm text-green-600">☁️ Cloud</span></h1>
      </div>
@@ -124,7 +125,7 @@
      <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard Amministratore</h2>
      <p class="text-gray-600">Gestisci studenti e corsi - Dati salvati su Google Sheets ☁️</p>
     </div><!-- Admin Navigation Tabs -->
-    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg"><button onclick="showAdminTab('students')" id="studentsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-blue-600 shadow-sm"> 👥 Gestione Studenti </button> <button onclick="showAdminTab('courses')" id="coursesTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📚 Gestione Corsi </button> <button onclick="showAdminTab('reports')" id="reportsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📊 Report </button>
+    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg"><button onclick="showAdminTab('students')" id="studentsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-blue-600 shadow-sm"> 👥 Gestione Studenti </button> <button onclick="showAdminTab('courses')" id="coursesTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📚 Gestione Corsi </button> <button onclick="showAdminTab('reports')" id="reportsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📊 Report </button> <button onclick="showAdminTab('settings')" id="settingsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> ⚙️ Impostazioni </button>
     </div><!-- Students Management -->
     <div id="studentsSection" class="fade-in">
      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -192,6 +193,56 @@
        </div>
       </div>
      </div>
+    </div><!-- Settings Section -->
+    <div id="settingsSection" class="hidden">
+     <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-6">⚙️ Configurazione Piattaforma</h3><!-- EmailJS Configuration -->
+      <div class="border-b border-gray-200 pb-6 mb-6">
+       <div class="flex items-center justify-between mb-4">
+        <div>
+         <h4 class="text-lg font-medium text-gray-800">📧 Configurazione EmailJS</h4>
+         <p class="text-sm text-gray-600 mt-1">Imposta le credenziali per l'invio automatico delle email agli studenti</p>
+        </div>
+        <div id="emailStatusBadge" class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+         ❌ Non Configurato
+        </div>
+       </div>
+       <form onsubmit="saveEmailJSConfig(event)" class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Public Key</label> <input type="text" id="emailJSPublicKey" placeholder="es: xYz123AbC456" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Account → General → Public Key</p>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Service ID</label> <input type="text" id="emailJSServiceID" placeholder="es: service_abc123" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Services → Il tuo Service ID</p>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Template ID</label> <input type="text" id="emailJSTemplateID" placeholder="es: template_xyz789" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Templates → Il tuo Template ID</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+         <h5 class="font-medium text-blue-900 mb-2">📋 Template Email Richiesto</h5>
+         <p class="text-sm text-blue-800 mb-2">Il tuo template EmailJS deve contenere questi parametri:</p>
+         <ul class="text-xs text-blue-700 space-y-1 ml-4">
+          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}student_name{{'}}'}}</code> - Nome completo studente</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}student_email{{'}}'}}</code> - Email studente</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}activation_link{{'}}'}}</code> - Link per creare password</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}platform_name{{'}}'}}</code> - Nome piattaforma</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}company_name{{'}}'}}</code> - Nome azienda studente</li>
+         </ul>
+        </div>
+        <div class="flex space-x-3"><button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"> 💾 Salva Configurazione </button> <button type="button" onclick="testEmailJSConfig()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"> 🧪 Test Email </button>
+        </div>
+       </form>
+      </div><!-- Instructions -->
+      <div class="bg-gray-50 rounded-lg p-4">
+       <h5 class="font-medium text-gray-800 mb-3">📚 Come ottenere le credenziali EmailJS:</h5>
+       <ol class="text-sm text-gray-700 space-y-2 ml-4">
+        <li><strong>1.</strong> Vai su <a href="https://www.emailjs.com/" target="_blank" class="text-blue-600 hover:underline">https://www.emailjs.com/</a> e crea un account gratuito</li>
+        <li><strong>2.</strong> Crea un <strong>Email Service</strong> (Gmail, Outlook, ecc.) e collegalo al tuo account email</li>
+        <li><strong>3.</strong> Crea un <strong>Email Template</strong> con i parametri richiesti sopra</li>
+        <li><strong>4.</strong> Copia <strong>Public Key</strong>, <strong>Service ID</strong> e <strong>Template ID</strong> e inseriscili qui sopra</li>
+        <li><strong>5.</strong> Clicca <strong>Salva Configurazione</strong> e testa l'invio email!</li>
+       </ol>
+      </div>
+     </div>
     </div>
    </div><!-- Student Dashboard -->
    <div id="studentDashboard" class="hidden max-w-7xl mx-auto p-6">
@@ -246,6 +297,71 @@
    </div>
   </div>
   <script>
+        // ==========================================
+        // EMAILJS FUNCTIONS
+        // ==========================================
+
+        // Inizializza EmailJS
+        function initEmailJS() {
+            if (typeof emailjs !== 'undefined' && emailJSConfig.publicKey && emailJSConfig.serviceId && emailJSConfig.templateId) {
+                emailjs.init(emailJSConfig.publicKey);
+                return true;
+            }
+            return false;
+        }
+
+        // Verifica se EmailJS è configurato
+        function isEmailJSConfigured() {
+            return emailJSConfig.publicKey && emailJSConfig.serviceId && emailJSConfig.templateId;
+        }
+
+        // Genera token per attivazione account
+        function generateActivationToken(studentId, email) {
+            const timestamp = Date.now();
+            const data = `${studentId}-${email}-${timestamp}`;
+            // In produzione, usa un token sicuro generato server-side
+            return btoa(data); // Base64 encoding per semplicità
+        }
+
+        // Invia email di benvenuto con link attivazione
+        async function sendWelcomeEmail(student) {
+            if (!initEmailJS()) {
+                console.warn('EmailJS non configurato. Email non inviata.');
+                return { success: false, message: 'EmailJS non configurato' };
+            }
+
+            try {
+                // Genera token unico per attivazione
+                const activationToken = generateActivationToken(student.id, student.email);
+                
+                // Crea link di attivazione (usa il tuo dominio reale)
+                const activationLink = `${window.location.origin}${window.location.pathname}?action=activate&token=${activationToken}`;
+
+                // Parametri per il template EmailJS
+                const templateParams = {
+                    student_name: `${student.name} ${student.surname}`,
+                    student_email: student.email,
+                    activation_link: activationLink,
+                    platform_name: 'EduPlatform',
+                    company_name: student.company
+                };
+
+                // Invia email
+                const response = await emailjs.send(
+                    emailJSConfig.serviceId,
+                    emailJSConfig.templateId,
+                    templateParams
+                );
+
+                console.log('✅ Email inviata con successo:', response);
+                return { success: true, message: 'Email inviata con successo' };
+
+            } catch (error) {
+                console.error('❌ Errore invio email:', error);
+                return { success: false, message: error.text || error.message };
+            }
+        }
+
         // ==========================================
         // GOOGLE SHEETS API FUNCTIONS
         // ==========================================
@@ -410,7 +526,10 @@
             
             let successCount = 0;
             let errorCount = 0;
+            let emailsSent = 0;
+            let emailsFailed = 0;
             const errors = [];
+            const importedStudents = [];
             
             for (let i = 0; i < excelData.length; i++) {
                 const row = excelData[i];
@@ -455,6 +574,7 @@
                 
                 if (result) {
                     students.push(newStudent);
+                    importedStudents.push(newStudent);
                     successCount++;
                 } else {
                     errorCount++;
@@ -465,14 +585,34 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
+            // Invia email a tutti gli studenti importati
+            if (importedStudents.length > 0) {
+                showLoading(`Invio email a ${importedStudents.length} studenti...`);
+                
+                for (const student of importedStudents) {
+                    const emailResult = await sendWelcomeEmail(student);
+                    if (emailResult.success) {
+                        emailsSent++;
+                    } else {
+                        emailsFailed++;
+                    }
+                    // Delay per rispettare limiti EmailJS (circa 200 email/mese nel piano gratuito)
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
             hideLoading();
             loadStudents();
             
             // Mostra risultati
             let message = `✅ Importazione completata!\n\n`;
             message += `✔️ Studenti importati: ${successCount}\n`;
+            message += `📧 Email inviate: ${emailsSent}\n`;
+            if (emailsFailed > 0) {
+                message += `⚠️ Email non inviate: ${emailsFailed}\n`;
+            }
             if (errorCount > 0) {
-                message += `❌ Errori: ${errorCount}\n\n`;
+                message += `❌ Errori importazione: ${errorCount}\n\n`;
                 message += `Dettagli errori:\n${errors.slice(0, 5).join('\n')}`;
                 if (errors.length > 5) {
                     message += `\n... e altri ${errors.length - 5} errori`;
@@ -507,6 +647,11 @@
         let students = [];
         let courses = [];
         let progressData = [];
+        let emailJSConfig = {
+            publicKey: '',
+            serviceId: '',
+            templateId: ''
+        };
 
         // ==========================================
         // AUTHENTICATION
@@ -557,10 +702,110 @@
             students = await readFromSheets('Studenti');
             courses = await readFromSheets('Corsi');
             progressData = await readFromSheets('Progressi');
+            await loadEmailJSConfig(); // Carica configurazione EmailJS
             
             loadStudents();
             loadCourses();
             updateStats();
+        }
+
+        // ==========================================
+        // SETTINGS FUNCTIONS
+        // ==========================================
+        
+        // Salva configurazione EmailJS su Google Sheets
+        async function saveEmailJSConfig(event) {
+            event.preventDefault();
+            
+            const publicKey = document.getElementById('emailJSPublicKey').value.trim();
+            const serviceId = document.getElementById('emailJSServiceID').value.trim();
+            const templateId = document.getElementById('emailJSTemplateID').value.trim();
+            
+            if (!publicKey || !serviceId || !templateId) {
+                showNotification('⚠️ Compila tutti i campi!', 'error');
+                return;
+            }
+            
+            const configData = {
+                id: 'emailjs_config',
+                publicKey: publicKey,
+                serviceId: serviceId,
+                templateId: templateId,
+                updatedDate: new Date().toISOString(),
+                updatedBy: currentUser.name
+            };
+            
+            const result = await writeToSheets('Configurazioni', 'create', configData);
+            
+            if (result) {
+                // Aggiorna config in memoria
+                emailJSConfig.publicKey = publicKey;
+                emailJSConfig.serviceId = serviceId;
+                emailJSConfig.templateId = templateId;
+                
+                // Aggiorna badge stato
+                updateEmailStatusBadge();
+                
+                showNotification('✅ Configurazione EmailJS salvata con successo!', 'success');
+            }
+        }
+        
+        // Test configurazione EmailJS
+        async function testEmailJSConfig() {
+            if (!isEmailJSConfigured()) {
+                showNotification('⚠️ Configura EmailJS prima di testare!', 'error');
+                return;
+            }
+            
+            showLoading('Invio email di test...');
+            
+            const testStudent = {
+                id: 'test_' + Date.now(),
+                name: 'Test',
+                surname: 'Utente',
+                email: currentUser.email, // Invia all'admin
+                company: 'Test Company'
+            };
+            
+            const emailResult = await sendWelcomeEmail(testStudent);
+            hideLoading();
+            
+            if (emailResult.success) {
+                showNotification(`✅ Email di test inviata!\n📧 Controlla la casella ${currentUser.email}`, 'success');
+            } else {
+                showNotification(`❌ Errore invio email:\n${emailResult.message}\n\nVerifica le credenziali EmailJS!`, 'error');
+            }
+        }
+        
+        // Carica configurazione EmailJS da Google Sheets
+        async function loadEmailJSConfig() {
+            const configs = await readFromSheets('Configurazioni');
+            const emailConfig = configs.find(c => c.id === 'emailjs_config');
+            
+            if (emailConfig) {
+                emailJSConfig.publicKey = emailConfig.publicKey || '';
+                emailJSConfig.serviceId = emailConfig.serviceId || '';
+                emailJSConfig.templateId = emailConfig.templateId || '';
+                
+                // Popola i campi del form
+                document.getElementById('emailJSPublicKey').value = emailJSConfig.publicKey;
+                document.getElementById('emailJSServiceID').value = emailJSConfig.serviceId;
+                document.getElementById('emailJSTemplateID').value = emailJSConfig.templateId;
+                
+                updateEmailStatusBadge();
+            }
+        }
+        
+        // Aggiorna badge stato EmailJS
+        function updateEmailStatusBadge() {
+            const badge = document.getElementById('emailStatusBadge');
+            if (isEmailJSConfigured()) {
+                badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+                badge.textContent = '✅ Configurato';
+            } else {
+                badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                badge.textContent = '❌ Non Configurato';
+            }
         }
 
         // ==========================================
@@ -570,16 +815,22 @@
             document.getElementById('studentsSection').classList.add('hidden');
             document.getElementById('coursesSection').classList.add('hidden');
             document.getElementById('reportsSection').classList.add('hidden');
+            document.getElementById('settingsSection').classList.add('hidden');
             
             document.getElementById('studentsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
             document.getElementById('coursesTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
             document.getElementById('reportsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
+            document.getElementById('settingsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
             
             document.getElementById(tab + 'Section').classList.remove('hidden');
             document.getElementById(tab + 'Tab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-blue-600 shadow-sm';
             
             if (tab === 'reports') {
                 updateStats();
+            }
+            
+            if (tab === 'settings') {
+                updateEmailStatusBadge();
             }
         }
 
@@ -626,13 +877,24 @@
                 registrationDate: new Date().toISOString()
             };
             
+            showLoading('Salvataggio studente...');
             const result = await writeToSheets('Studenti', 'create', newStudent);
             
             if (result) {
                 students.push(newStudent);
                 loadStudents();
                 hideModal('addStudentModal');
-                showNotification(`✅ Studente "${name} ${surname}" aggiunto con successo!`, 'success');
+                
+                // Invia email di benvenuto
+                showLoading('Invio email di benvenuto...');
+                const emailResult = await sendWelcomeEmail(newStudent);
+                hideLoading();
+                
+                if (emailResult.success) {
+                    showNotification(`✅ Studente "${name} ${surname}" aggiunto!\n📧 Email di attivazione inviata a ${email}`, 'success');
+                } else {
+                    showNotification(`✅ Studente "${name} ${surname}" aggiunto!\n⚠️ Errore invio email: ${emailResult.message}`, 'success');
+                }
                 
                 // Reset form
                 document.getElementById('studentName').value = '';
@@ -640,6 +902,8 @@
                 document.getElementById('studentEmail').value = '';
                 document.getElementById('studentPhone').value = '';
                 document.getElementById('studentCompany').value = '';
+            } else {
+                hideLoading();
             }
         }
 
@@ -853,5 +1117,5 @@
             }
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a4be86a43511498',t:'MTc2NDE4NjU1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a4d14ee00350f6e',t:'MTc2NDE5ODg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
