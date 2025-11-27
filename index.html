@@ -66,27 +66,20 @@
     <div class="spinner mx-auto mb-4"></div>
     <p class="text-white text-lg" id="loadingText">Caricamento dati...</p>
    </div>
-  </div><!-- ⚠️ CONFIGURAZIONE GOOGLE SHEETS - INSERISCI IL TUO URL QUI! -->
+  </div><!-- ⚠️ CONFIGURAZIONE GOOGLE SHEETS -->
   <script>
-        // 🔧 CONFIGURAZIONE GOOGLE SHEETS - MODIFICA QUESTO URL CON IL TUO!
+        // 🔧 INCOLLA QUI L'URL DEL TUO GOOGLE APPS SCRIPT
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynIy8SqTchM9PszhFGrvw_gnkYnTbY0Jn8sW2rEY88xPTVW-r7WuL2H1EgyanuQSflfg/exec';
         
-        // ⚠️ ISTRUZIONI GOOGLE SHEETS:
-        // 1. Vai su Google Sheets e crea il foglio con Apps Script
-        // 2. Pubblica come Web App e copia l'URL
-        // 3. Sostituisci 'TUO_ID_SHEETS_QUI' con il tuo URL completo
-        // 4. Esempio: 'https://script.google.com/macros/s/AKfycbxXXXXXXXXXX/exec'
-        
-        // Verifica configurazioni
-        if (GOOGLE_SHEETS_URL.includes('TUO_ID_SHEETS_QUI')) {
-            console.warn('⚠️ ATTENZIONE: Configura il GOOGLE_SHEETS_URL con il tuo URL di Google Sheets!');
-        }
+        // ⚠️ IMPORTANTE: Devi creare una NUOVA DISTRIBUZIONE dello script!
+        // Vai su Google Apps Script → Deploy → NUOVA distribuzione
+        // Imposta accesso "Chiunque" e copia il nuovo URL qui sopra
     </script><!-- Navigation -->
   <nav class="bg-white shadow-lg border-b-4 border-blue-500">
    <div class="max-w-7xl mx-auto px-4">
     <div class="flex justify-between items-center py-4">
      <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">����</span>
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">🎓</span>
       </div>
       <h1 class="text-2xl font-bold text-gray-800">EduPlatform <span class="text-sm text-green-600">☁️ Cloud</span></h1>
      </div>
@@ -104,9 +97,9 @@
      <p class="text-gray-600 mt-2">Dati salvati su Google Sheets ☁️</p>
     </div>
     <form onsubmit="login(event)" class="space-y-6">
-     <div><label class="block text-sm font-medium text-gray-700 mb-2">Email</label> <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+     <div><label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label> <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
      </div>
-     <div><label class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+     <div><label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
      </div><button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"> Accedi </button>
     </form>
     <div class="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -208,24 +201,24 @@
         </div>
        </div>
        <form onsubmit="saveEmailJSConfig(event)" class="space-y-4">
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Public Key</label> <input type="text" id="emailJSPublicKey" placeholder="es: xYz123AbC456" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <div><label for="emailJSPublicKey" class="block text-sm font-medium text-gray-700 mb-2">Public Key</label> <input type="text" id="emailJSPublicKey" placeholder="es: xYz123AbC456" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
          <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Account → General → Public Key</p>
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Service ID</label> <input type="text" id="emailJSServiceID" placeholder="es: service_abc123" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <div><label for="emailJSServiceID" class="block text-sm font-medium text-gray-700 mb-2">Service ID</label> <input type="text" id="emailJSServiceID" placeholder="es: service_abc123" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
          <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Services → Il tuo Service ID</p>
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Template ID</label> <input type="text" id="emailJSTemplateID" placeholder="es: template_xyz789" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <div><label for="emailJSTemplateID" class="block text-sm font-medium text-gray-700 mb-2">Template ID</label> <input type="text" id="emailJSTemplateID" placeholder="es: template_xyz789" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
          <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Templates → Il tuo Template ID</p>
         </div>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
          <h5 class="font-medium text-blue-900 mb-2">📋 Template Email Richiesto</h5>
          <p class="text-sm text-blue-800 mb-2">Il tuo template EmailJS deve contenere questi parametri:</p>
          <ul class="text-xs text-blue-700 space-y-1 ml-4">
-          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}student_name{{'}}'}}</code> - Nome completo studente</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}student_email{{'}}'}}</code> - Email studente</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}activation_link{{'}}'}}</code> - Link per creare password</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}platform_name{{'}}'}}</code> - Nome piattaforma</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{'{{'}}company_name{{'}}'}}</code> - Nome azienda studente</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{student_name}}</code> - Nome completo studente</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{student_email}}</code> - Email studente</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{activation_link}}</code> - Link per creare password</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{platform_name}}</code> - Nome piattaforma</li>
+          <li>• <code class="bg-blue-100 px-1 rounded">{{company_name}}</code> - Nome azienda studente</li>
          </ul>
         </div>
         <div class="flex space-x-3"><button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"> 💾 Salva Configurazione </button> <button type="button" onclick="testEmailJSConfig()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"> 🧪 Test Email </button>
@@ -235,12 +228,20 @@
       <div class="bg-gray-50 rounded-lg p-4">
        <h5 class="font-medium text-gray-800 mb-3">📚 Come ottenere le credenziali EmailJS:</h5>
        <ol class="text-sm text-gray-700 space-y-2 ml-4">
-        <li><strong>1.</strong> Vai su <a href="https://www.emailjs.com/" target="_blank" class="text-blue-600 hover:underline">https://www.emailjs.com/</a> e crea un account gratuito</li>
+        <li><strong>1.</strong> Vai su <a href="https://www.emailjs.com/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">https://www.emailjs.com/</a> e crea un account gratuito</li>
         <li><strong>2.</strong> Crea un <strong>Email Service</strong> (Gmail, Outlook, ecc.) e collegalo al tuo account email</li>
         <li><strong>3.</strong> Crea un <strong>Email Template</strong> con i parametri richiesti sopra</li>
         <li><strong>4.</strong> Copia <strong>Public Key</strong>, <strong>Service ID</strong> e <strong>Template ID</strong> e inseriscili qui sopra</li>
         <li><strong>5.</strong> Clicca <strong>Salva Configurazione</strong> e testa l'invio email!</li>
        </ol>
+      </div>
+     </div><!-- Google Sheets Connection Test -->
+     <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🔗 Test Connessione Google Sheets</h3>
+      <div class="space-y-3">
+       <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg"><span class="text-sm text-gray-700 font-medium">URL Configurato:</span> <span id="sheetsUrlDisplay" class="text-xs text-gray-500 font-mono ml-2 break-all"></span>
+       </div><button onclick="testConnection()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors font-medium"> 🧪 Testa Connessione </button>
+       <div id="connectionResult" class="hidden p-4 rounded-lg"></div>
       </div>
      </div>
     </div>
@@ -261,15 +262,15 @@
       <h3 class="text-xl font-semibold text-gray-800">Aggiungi Studente</h3><button onclick="hideModal('addStudentModal')" class="text-gray-400 hover:text-gray-600"> <span class="text-2xl">×</span> </button>
      </div>
      <form onsubmit="addStudent(event)" class="space-y-4">
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Nome</label> <input type="text" id="studentName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Nome</label> <input type="text" id="studentName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Cognome</label> <input type="text" id="studentSurname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentSurname" class="block text-sm font-medium text-gray-700 mb-1">Cognome</label> <input type="text" id="studentSurname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label> <input type="email" id="studentEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label> <input type="email" id="studentEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label> <input type="tel" id="studentPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefono</label> <input type="tel" id="studentPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Azienda</label> <input type="text" id="studentCompany" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentCompany" class="block text-sm font-medium text-gray-700 mb-1">Azienda</label> <input type="text" id="studentCompany" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
       <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addStudentModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"> Aggiungi </button>
       </div>
@@ -284,9 +285,9 @@
       <h3 class="text-xl font-semibold text-gray-800">Crea Nuovo Corso</h3><button onclick="hideModal('addCourseModal')" class="text-gray-400 hover:text-gray-600"> <span class="text-2xl">×</span> </button>
      </div>
      <form onsubmit="addCourse(event)" class="space-y-4">
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label> <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="courseTitle" class="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label> <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Descrizione</label> <textarea id="courseDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+      <div><label for="courseDescription" class="block text-sm font-medium text-gray-700 mb-1">Descrizione</label> <textarea id="courseDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
       </div>
       <div class="flex items-center space-x-2"><input type="checkbox" id="courseHasTest" class="rounded"> <label for="courseHasTest" class="text-sm font-medium text-gray-700">Il corso include un test finale</label>
       </div>
@@ -319,8 +320,7 @@
         function generateActivationToken(studentId, email) {
             const timestamp = Date.now();
             const data = `${studentId}-${email}-${timestamp}`;
-            // In produzione, usa un token sicuro generato server-side
-            return btoa(data); // Base64 encoding per semplicità
+            return btoa(data);
         }
 
         // Invia email di benvenuto con link attivazione
@@ -331,13 +331,9 @@
             }
 
             try {
-                // Genera token unico per attivazione
                 const activationToken = generateActivationToken(student.id, student.email);
-                
-                // Crea link di attivazione (usa il tuo dominio reale)
                 const activationLink = `${window.location.origin}${window.location.pathname}?action=activate&token=${activationToken}`;
 
-                // Parametri per il template EmailJS
                 const templateParams = {
                     student_name: `${student.name} ${student.surname}`,
                     student_email: student.email,
@@ -346,7 +342,6 @@
                     company_name: student.company
                 };
 
-                // Invia email
                 const response = await emailjs.send(
                     emailJSConfig.serviceId,
                     emailJSConfig.templateId,
@@ -376,25 +371,190 @@
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
 
+        // Test connessione Google Sheets con diagnostica dettagliata
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'p-4 rounded-lg bg-blue-50 border border-blue-200';
+            resultDiv.innerHTML = '<p class="text-sm text-blue-800">🔄 Controllo connessione in corso...</p>';
+            
+            try {
+                // Test 1: Verifica URL
+                if (!GOOGLE_SHEETS_URL || GOOGLE_SHEETS_URL.includes('TUO_ID') || GOOGLE_SHEETS_URL.length < 50) {
+                    resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-red-800 font-medium mb-2">❌ URL non configurato correttamente</p>
+                        <p class="text-xs text-red-700 mb-3">L'URL di Google Sheets non è valido o non è stato configurato.</p>
+                        <div class="bg-red-100 p-3 rounded text-xs text-red-800">
+                            <p class="font-medium mb-2">✅ SOLUZIONE:</p>
+                            <ol class="list-decimal ml-4 space-y-1">
+                                <li>Vai su Google Apps Script</li>
+                                <li>Clicca "Deploy" → "NUOVA distribuzione"</li>
+                                <li>Scegli tipo "Web app"</li>
+                                <li>Imposta "Chi ha accesso" su <strong>"Chiunque"</strong></li>
+                                <li>Copia l'URL (inizia con https://script.google.com/macros/s/...)</li>
+                                <li>Incollalo nel codice alla riga ~100</li>
+                            </ol>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Test 2: Tentativo di connessione
+                const testUrl = `${GOOGLE_SHEETS_URL}?action=read&sheet=Studenti&_t=${Date.now()}`;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi timeout
+                
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    cache: 'no-cache',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'error') {
+                    // Errore dal server Google Sheets
+                    resultDiv.className = 'p-4 rounded-lg bg-orange-50 border border-orange-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-orange-800 font-medium mb-2">⚠️ Errore dal server Google Sheets</p>
+                        <p class="text-xs text-orange-700 mb-2">Messaggio: ${result.message}</p>
+                        <div class="bg-orange-100 p-3 rounded text-xs text-orange-800">
+                            <p class="font-medium mb-2">🔍 POSSIBILI CAUSE:</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li>Il foglio "Studenti" non esiste nel Google Sheet</li>
+                                <li>Le intestazioni non corrispondono (vedi documentazione)</li>
+                                <li>Errore nello script Google Apps Script</li>
+                            </ul>
+                            <p class="font-medium mt-3 mb-1">✅ VERIFICA:</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li>Il Google Sheet deve avere 4 fogli: <strong>Studenti</strong>, <strong>Corsi</strong>, <strong>Progressi</strong>, <strong>Configurazioni</strong></li>
+                                <li>Ogni foglio deve avere le intestazioni corrette nella riga 1</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (result.status === 'success') {
+                    // Successo!
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-green-800 font-medium mb-2">✅ Connessione perfetta!</p>
+                        <p class="text-xs text-green-700 mb-2">Il collegamento con Google Sheets funziona correttamente.</p>
+                        <div class="bg-green-100 p-3 rounded text-xs text-green-800">
+                            <p class="font-medium mb-1">📊 Dati trovati:</p>
+                            <ul class="list-disc ml-4">
+                                <li>Studenti caricati: <strong>${result.data ? result.data.length : 0}</strong></li>
+                            </ul>
+                            <p class="mt-2">Ora puoi aggiungere studenti e corsi! 🚀</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                // Errore di rete o CORS
+                if (error.name === 'AbortError') {
+                    resultDiv.className = 'p-4 rounded-lg bg-yellow-50 border border-yellow-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-yellow-800 font-medium mb-2">⏱️ Timeout connessione</p>
+                        <p class="text-xs text-yellow-700 mb-3">Il server impiega troppo tempo a rispondere.</p>
+                        <div class="bg-yellow-100 p-3 rounded text-xs text-yellow-800">
+                            <p class="font-medium mb-2">💡 POSSIBILI CAUSE:</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li>URL non corretto</li>
+                                <li>Script non pubblicato</li>
+                                <li>Connessione internet lenta</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-red-800 font-medium mb-2">🚫 Errore CORS - Accesso negato</p>
+                        <p class="text-xs text-red-700 mb-3">Lo script Google Sheets non è pubblicato con accesso "Chiunque".</p>
+                        <div class="bg-red-100 p-3 rounded text-xs text-red-800">
+                            <p class="font-medium mb-2">✅ SOLUZIONE DEFINITIVA:</p>
+                            <ol class="list-decimal ml-4 space-y-1">
+                                <li><strong>Apri Google Apps Script</strong></li>
+                                <li>Clicca "Deploy" in alto a destra</li>
+                                <li>Seleziona <strong>"NUOVA distribuzione"</strong> (NON modificare quella vecchia!)</li>
+                                <li>Clicca sull'icona ingranaggio ⚙️ → Scegli "Web app"</li>
+                                <li><strong>FONDAMENTALE:</strong> Imposta "Chi ha accesso" su <strong>"Chiunque"</strong></li>
+                                <li>Clicca "Deploy"</li>
+                                <li>Copia il nuovo URL che appare</li>
+                                <li>Sostituiscilo nel codice HTML alla riga ~100</li>
+                                <li>Ricarica questa pagina e riprova il test</li>
+                            </ol>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-red-800 font-medium mb-2">❌ Errore generico</p>
+                        <p class="text-xs text-red-700 mb-2">Messaggio: ${error.message}</p>
+                        <div class="bg-red-100 p-3 rounded text-xs text-red-800">
+                            <p class="font-medium mb-2">🔧 Cosa controllare:</p>
+                            <ul class="list-disc ml-4 space-y-1">
+                                <li>Verifica che l'URL sia corretto</li>
+                                <li>Lo script deve essere pubblicato come "Web app"</li>
+                                <li>L'accesso deve essere impostato su "Chiunque"</li>
+                                <li>Prova a creare una NUOVA distribuzione</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         // Leggi dati da Google Sheets
         async function readFromSheets(sheetName) {
             try {
-                showLoading();
-                const response = await fetch(`${GOOGLE_SHEETS_URL}?action=read&sheet=${sheetName}`);
+                showLoading(`Caricamento ${sheetName}...`);
+                
+                const url = `${GOOGLE_SHEETS_URL}?action=read&sheet=${sheetName}&_=${Date.now()}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    cache: 'no-cache',
+                    redirect: 'follow'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const result = await response.json();
                 hideLoading();
                 
                 if (result.status === 'success') {
-                    return result.data;
+                    console.log(`✅ ${sheetName} caricato:`, result.data.length, 'record');
+                    return result.data || [];
                 } else {
-                    console.error('Errore lettura:', result.message);
-                    showNotification('Errore nel caricamento dei dati: ' + result.message, 'error');
+                    console.error(`❌ Errore ${sheetName}:`, result.message);
+                    showNotification(`Errore caricamento ${sheetName}: ${result.message}`, 'error');
                     return [];
                 }
             } catch (error) {
                 hideLoading();
-                console.error('Errore connessione Google Sheets:', error);
-                showNotification('Errore di connessione a Google Sheets. Verifica la configurazione dell\'URL.', 'error');
+                console.error(`❌ Errore connessione ${sheetName}:`, error);
+                
+                showNotification(
+                    `⚠️ Impossibile caricare ${sheetName}\n\n` +
+                    `Vai su Impostazioni → Test Connessione per diagnosticare il problema.`,
+                    'error'
+                );
+                
                 return [];
             }
         }
@@ -403,6 +563,7 @@
         async function writeToSheets(sheetName, action, data) {
             try {
                 showLoading('Salvataggio in corso...');
+                
                 const response = await fetch(GOOGLE_SHEETS_URL, {
                     method: 'POST',
                     headers: {
@@ -412,23 +573,34 @@
                         action: action,
                         sheet: sheetName,
                         data: data
-                    })
+                    }),
+                    redirect: 'follow'
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const result = await response.json();
                 hideLoading();
                 
                 if (result.status === 'success') {
+                    console.log(`✅ ${action} su ${sheetName} completato`);
                     return result;
                 } else {
-                    console.error('Errore scrittura:', result.message);
-                    showNotification('Errore nel salvataggio: ' + result.message, 'error');
+                    console.error(`❌ Errore ${action}:`, result.message);
+                    showNotification(`Errore nel salvataggio: ${result.message}`, 'error');
                     return null;
                 }
             } catch (error) {
                 hideLoading();
-                console.error('Errore connessione Google Sheets:', error);
-                showNotification('Errore di connessione a Google Sheets.', 'error');
+                console.error(`❌ Errore ${action} su ${sheetName}:`, error);
+                showNotification(
+                    `⚠️ Errore salvataggio dati\n\n` +
+                    `Verifica la connessione in Impostazioni.\n\n` +
+                    `Errore: ${error.message}`,
+                    'error'
+                );
                 return null;
             }
         }
@@ -437,10 +609,8 @@
         // EXCEL UPLOAD FUNCTIONS
         // ==========================================
 
-        // Download template Excel
         function downloadExcelTemplate() {
             try {
-                // Verifica che la libreria XLSX sia caricata
                 if (typeof XLSX === 'undefined') {
                     showNotification('❌ Errore: Libreria Excel non caricata. Ricarica la pagina.', 'error');
                     return;
@@ -448,28 +618,24 @@
                 
                 const wb = XLSX.utils.book_new();
                 
-                // Crea foglio con intestazioni e righe di esempio
                 const wsData = [
                     ['Nome', 'Cognome', 'Email', 'Telefono', 'Azienda'],
                     ['Mario', 'Rossi', 'mario.rossi@esempio.com', '3331234567', 'Azienda ABC'],
                     ['Laura', 'Bianchi', 'laura.bianchi@esempio.com', '3347654321', 'Azienda XYZ'],
-                    ['', '', '', '', ''] // Riga vuota per compilazione
+                    ['', '', '', '', '']
                 ];
                 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
                 
-                // Imposta larghezza colonne
                 ws['!cols'] = [
-                    {wch: 15}, // Nome
-                    {wch: 15}, // Cognome
-                    {wch: 30}, // Email
-                    {wch: 15}, // Telefono
-                    {wch: 20}  // Azienda
+                    {wch: 15},
+                    {wch: 15},
+                    {wch: 30},
+                    {wch: 15},
+                    {wch: 20}
                 ];
                 
                 XLSX.utils.book_append_sheet(wb, ws, 'Studenti');
-                
-                // Scarica il file
                 XLSX.writeFile(wb, 'template_studenti.xlsx');
                 
                 showNotification('📥 Template scaricato! Compilalo e ricaricalo nella piattaforma.', 'success');
@@ -479,7 +645,6 @@
             }
         }
 
-        // Gestisci upload file Excel
         async function handleExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -493,7 +658,6 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     
-                    // Leggi primo foglio
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                     
@@ -504,7 +668,6 @@
                         return;
                     }
                     
-                    // Valida e importa dati
                     await importStudentsFromExcel(jsonData);
                     
                 } catch (error) {
@@ -515,12 +678,9 @@
             };
             
             reader.readAsArrayBuffer(file);
-            
-            // Reset input per permettere reload stesso file
             event.target.value = '';
         }
 
-        // Importa studenti da dati Excel
         async function importStudentsFromExcel(excelData) {
             showLoading(`Importazione ${excelData.length} studenti...`);
             
@@ -534,14 +694,12 @@
             for (let i = 0; i < excelData.length; i++) {
                 const row = excelData[i];
                 
-                // Valida campi obbligatori
                 if (!row.Nome || !row.Cognome || !row.Email || !row.Azienda) {
                     errorCount++;
-                    errors.push(`Riga ${i + 2}: Campi obbligatori mancanti (Nome, Cognome, Email, Azienda)`);
+                    errors.push(`Riga ${i + 2}: Campi obbligatori mancanti`);
                     continue;
                 }
                 
-                // Valida formato email
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(row.Email)) {
                     errorCount++;
@@ -549,7 +707,6 @@
                     continue;
                 }
                 
-                // Controlla duplicati
                 const duplicate = students.find(s => s.email.toLowerCase() === row.Email.toLowerCase());
                 if (duplicate) {
                     errorCount++;
@@ -557,7 +714,6 @@
                     continue;
                 }
                 
-                // Crea nuovo studente
                 const newStudent = {
                     id: Date.now().toString() + '_' + i,
                     name: row.Nome.trim(),
@@ -569,7 +725,6 @@
                     registrationDate: new Date().toISOString()
                 };
                 
-                // Salva su Google Sheets
                 const result = await writeToSheets('Studenti', 'create', newStudent);
                 
                 if (result) {
@@ -578,14 +733,12 @@
                     successCount++;
                 } else {
                     errorCount++;
-                    errors.push(`Riga ${i + 2}: Errore salvataggio su Google Sheets`);
+                    errors.push(`Riga ${i + 2}: Errore salvataggio`);
                 }
                 
-                // Piccolo delay per non sovraccaricare API
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            // Invia email a tutti gli studenti importati
             if (importedStudents.length > 0) {
                 showLoading(`Invio email a ${importedStudents.length} studenti...`);
                 
@@ -596,7 +749,6 @@
                     } else {
                         emailsFailed++;
                     }
-                    // Delay per rispettare limiti EmailJS (circa 200 email/mese nel piano gratuito)
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
@@ -604,7 +756,6 @@
             hideLoading();
             loadStudents();
             
-            // Mostra risultati
             let message = `✅ Importazione completata!\n\n`;
             message += `✔️ Studenti importati: ${successCount}\n`;
             message += `📧 Email inviate: ${emailsSent}\n`;
@@ -612,8 +763,8 @@
                 message += `⚠️ Email non inviate: ${emailsFailed}\n`;
             }
             if (errorCount > 0) {
-                message += `❌ Errori importazione: ${errorCount}\n\n`;
-                message += `Dettagli errori:\n${errors.slice(0, 5).join('\n')}`;
+                message += `❌ Errori: ${errorCount}\n\n`;
+                message += `Dettagli:\n${errors.slice(0, 5).join('\n')}`;
                 if (errors.length > 5) {
                     message += `\n... e altri ${errors.length - 5} errori`;
                 }
@@ -661,7 +812,6 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
-            // Demo credentials (in produzione usa autenticazione vera!)
             const users = {
                 'admin@edu.com': { role: 'admin', name: 'Amministratore', password: 'admin123' },
                 'studente@edu.com': { role: 'student', name: 'Mario Rossi', password: 'student123' }
@@ -702,7 +852,7 @@
             students = await readFromSheets('Studenti');
             courses = await readFromSheets('Corsi');
             progressData = await readFromSheets('Progressi');
-            await loadEmailJSConfig(); // Carica configurazione EmailJS
+            await loadEmailJSConfig();
             
             loadStudents();
             loadCourses();
@@ -713,7 +863,6 @@
         // SETTINGS FUNCTIONS
         // ==========================================
         
-        // Salva configurazione EmailJS su Google Sheets
         async function saveEmailJSConfig(event) {
             event.preventDefault();
             
@@ -738,19 +887,16 @@
             const result = await writeToSheets('Configurazioni', 'create', configData);
             
             if (result) {
-                // Aggiorna config in memoria
                 emailJSConfig.publicKey = publicKey;
                 emailJSConfig.serviceId = serviceId;
                 emailJSConfig.templateId = templateId;
                 
-                // Aggiorna badge stato
                 updateEmailStatusBadge();
                 
                 showNotification('✅ Configurazione EmailJS salvata con successo!', 'success');
             }
         }
         
-        // Test configurazione EmailJS
         async function testEmailJSConfig() {
             if (!isEmailJSConfigured()) {
                 showNotification('⚠️ Configura EmailJS prima di testare!', 'error');
@@ -763,7 +909,7 @@
                 id: 'test_' + Date.now(),
                 name: 'Test',
                 surname: 'Utente',
-                email: currentUser.email, // Invia all'admin
+                email: currentUser.email,
                 company: 'Test Company'
             };
             
@@ -777,7 +923,6 @@
             }
         }
         
-        // Carica configurazione EmailJS da Google Sheets
         async function loadEmailJSConfig() {
             const configs = await readFromSheets('Configurazioni');
             const emailConfig = configs.find(c => c.id === 'emailjs_config');
@@ -787,7 +932,6 @@
                 emailJSConfig.serviceId = emailConfig.serviceId || '';
                 emailJSConfig.templateId = emailConfig.templateId || '';
                 
-                // Popola i campi del form
                 document.getElementById('emailJSPublicKey').value = emailJSConfig.publicKey;
                 document.getElementById('emailJSServiceID').value = emailJSConfig.serviceId;
                 document.getElementById('emailJSTemplateID').value = emailJSConfig.templateId;
@@ -796,7 +940,6 @@
             }
         }
         
-        // Aggiorna badge stato EmailJS
         function updateEmailStatusBadge() {
             const badge = document.getElementById('emailStatusBadge');
             if (isEmailJSConfigured()) {
@@ -831,6 +974,7 @@
             
             if (tab === 'settings') {
                 updateEmailStatusBadge();
+                document.getElementById('sheetsUrlDisplay').textContent = GOOGLE_SHEETS_URL.substring(0, 50) + '...';
             }
         }
 
@@ -885,7 +1029,6 @@
                 loadStudents();
                 hideModal('addStudentModal');
                 
-                // Invia email di benvenuto
                 showLoading('Invio email di benvenuto...');
                 const emailResult = await sendWelcomeEmail(newStudent);
                 hideLoading();
@@ -896,7 +1039,6 @@
                     showNotification(`✅ Studente "${name} ${surname}" aggiunto!\n⚠️ Errore invio email: ${emailResult.message}`, 'success');
                 }
                 
-                // Reset form
                 document.getElementById('studentName').value = '';
                 document.getElementById('studentSurname').value = '';
                 document.getElementById('studentEmail').value = '';
@@ -911,7 +1053,6 @@
             const student = students.find(s => s.id === id);
             if (!student) return;
             
-            // Conferma inline (no alert)
             const confirmBtn = event.target;
             const originalText = confirmBtn.textContent;
             
@@ -1003,7 +1144,6 @@
                 hideModal('addCourseModal');
                 showNotification(`✅ Corso "${title}" creato con successo!`, 'success');
                 
-                // Reset form
                 document.getElementById('courseTitle').value = '';
                 document.getElementById('courseDescription').value = '';
                 document.getElementById('courseHasTest').checked = false;
@@ -1111,11 +1251,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             showAdminTab('students');
             
-            // Verifica configurazione
             if (GOOGLE_SHEETS_URL.includes('TUO_ID_SHEETS_QUI')) {
                 showNotification('⚠️ ATTENZIONE: Configura il GOOGLE_SHEETS_URL nel codice con il tuo URL di Google Sheets!', 'error');
             }
+            
+            console.log('🚀 Piattaforma caricata');
+            console.log('🔗 Google Sheets URL:', GOOGLE_SHEETS_URL);
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a4d14ee00350f6e',t:'MTc2NDE5ODg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a509956922a9a1f',t:'MTc2NDIzNTc0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
