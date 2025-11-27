@@ -693,12 +693,24 @@
             const errors = [];
             const importedStudents = [];
             
+            // Log dei dati Excel per diagnostica
+            console.log('📊 Dati Excel ricevuti:', excelData);
+            console.log('📋 Colonne presenti:', Object.keys(excelData[0] || {}));
+            
             for (let i = 0; i < excelData.length; i++) {
                 const row = excelData[i];
+                
+                console.log(`\n🔍 Elaborazione riga ${i + 2}:`, row);
                 
                 if (!row.Nome || !row.Cognome || !row.Email || !row.Azienda) {
                     errorCount++;
                     errors.push(`Riga ${i + 2}: Campi obbligatori mancanti`);
+                    console.error(`❌ Riga ${i + 2}: Campi mancanti`, {
+                        Nome: row.Nome,
+                        Cognome: row.Cognome,
+                        Email: row.Email,
+                        Azienda: row.Azienda
+                    });
                     continue;
                 }
                 
@@ -706,6 +718,7 @@
                 if (!emailRegex.test(row.Email)) {
                     errorCount++;
                     errors.push(`Riga ${i + 2}: Email "${row.Email}" non valida`);
+                    console.error(`❌ Riga ${i + 2}: Email non valida:`, row.Email);
                     continue;
                 }
                 
@@ -713,6 +726,7 @@
                 if (duplicate) {
                     errorCount++;
                     errors.push(`Riga ${i + 2}: Email "${row.Email}" già esistente`);
+                    console.error(`❌ Riga ${i + 2}: Email duplicata:`, row.Email);
                     continue;
                 }
                 
@@ -727,15 +741,22 @@
                     registrationDate: new Date().toISOString()
                 };
                 
+                console.log(`📤 Invio studente a Google Sheets:`, newStudent);
+                
                 const result = await writeToSheets('Studenti', 'create', newStudent);
                 
-                if (result) {
+                console.log(`📥 Risposta da Google Sheets:`, result);
+                
+                if (result && result.status === 'success') {
                     students.push(newStudent);
                     importedStudents.push(newStudent);
                     successCount++;
+                    console.log(`✅ Riga ${i + 2}: Salvato con successo!`);
                 } else {
                     errorCount++;
-                    errors.push(`Riga ${i + 2}: Errore salvataggio`);
+                    const errorMsg = result ? result.message : 'Nessuna risposta';
+                    errors.push(`Riga ${i + 2}: ${errorMsg}`);
+                    console.error(`❌ Riga ${i + 2}: Errore salvataggio -`, errorMsg);
                 }
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -1285,5 +1306,5 @@
             console.log('🔗 Google Sheets URL:', GOOGLE_SHEETS_URL);
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a50be1ae0419a1f',t:'MTc2NDIzNzI0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a50cb6b87e59a1f',t:'MTc2NDIzNzc5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
