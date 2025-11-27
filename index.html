@@ -69,7 +69,7 @@
   </div><!-- ⚠️ CONFIGURAZIONE GOOGLE SHEETS -->
   <script>
         // 🔧 INCOLLA QUI L'URL DEL TUO GOOGLE APPS SCRIPT
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxpbgfBbAWOoOvHZ2HVSLgZcXifk8jEhn2u8S_HJc0xz8AyDZPW8L9b3dI-u8Ub-zS9Xg/exec';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynIy8SqTchM9PszhFGrvw_gnkYnTbY0Jn8sW2rEY88xPTVW-r7WuL2H1EgyanuQSflfg/exec';
     </script><!-- Navigation -->
   <nav class="bg-white shadow-lg border-b-4 border-blue-500">
    <div class="max-w-7xl mx-auto px-4">
@@ -105,6 +105,30 @@
     </div>
     <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
      <p class="text-xs text-green-800">✅ <strong>Dati Persistenti:</strong> I dati vengono salvati su Google Sheets e rimangono anche dopo il refresh!</p>
+    </div>
+   </div>
+  </div><!-- Account Activation Screen -->
+  <div id="activationScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <div class="text-center mb-8">
+     <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-white text-2xl">🔐</span>
+     </div>
+     <h2 class="text-3xl font-bold text-gray-800">Crea la tua Password</h2>
+     <p class="text-gray-600 mt-2">Benvenuto! Imposta la password per il tuo account</p>
+    </div>
+    <div id="activationInfo" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+     <p class="text-sm text-blue-800"><strong>Email:</strong> <span id="activationEmail"></span></p>
+     <p class="text-sm text-blue-800 mt-1"><strong>Nome:</strong> <span id="activationName"></span></p>
+    </div>
+    <form onsubmit="activateAccount(event)" class="space-y-6">
+     <div><label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">Nuova Password</label> <input type="password" id="newPassword" required minlength="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Minimo 8 caratteri">
+      <p class="text-xs text-gray-500 mt-1">La password deve contenere almeno 8 caratteri</p>
+     </div>
+     <div><label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Conferma Password</label> <input type="password" id="confirmPassword" required minlength="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ripeti la password">
+     </div><button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"> 🔐 Attiva Account </button>
+    </form>
+    <div class="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+     <p class="text-xs text-yellow-800">💡 <strong>Suggerimento:</strong> Scegli una password sicura che ricorderai facilmente!</p>
     </div>
    </div>
   </div><!-- Main Dashboard -->
@@ -346,7 +370,7 @@
                     templateParams
                 );
 
-                console.log('✅ Email inviata con successo:', response);
+                console.log('����� Email inviata con successo:', response);
                 return { success: true, message: 'Email inviata con successo' };
 
             } catch (error) {
@@ -764,30 +788,56 @@
         // ==========================================
         async function login(event) {
             event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
             const password = document.getElementById('loginPassword').value;
             
-            const users = {
-                'admin@edu.com': { role: 'admin', name: 'Amministratore', password: 'admin123' },
-                'studente@edu.com': { role: 'student', name: 'Mario Rossi', password: 'student123' }
-            };
-            
-            if (users[email] && users[email].password === password) {
-                currentUser = { email, ...users[email] };
+            // Account admin predefinito
+            if (email === 'admin@edu.com' && password === 'admin123') {
+                currentUser = { email, role: 'admin', name: 'Amministratore' };
                 document.getElementById('currentUser').textContent = currentUser.name;
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                
-                if (currentUser.role === 'admin') {
-                    document.getElementById('adminDashboard').classList.remove('hidden');
-                    await loadAllData();
-                } else if (currentUser.role === 'student') {
-                    document.getElementById('studentDashboard').classList.remove('hidden');
-                    await loadStudentCourses();
-                }
-            } else {
-                showNotification('❌ Credenziali non valide', 'error');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                await loadAllData();
+                return;
             }
+            
+            // Carica studenti da Google Sheets se non già caricati
+            if (students.length === 0) {
+                await loadAllData();
+            }
+            
+            // Cerca studente nel database
+            const student = students.find(s => s.email.toLowerCase() === email);
+            
+            if (!student) {
+                showNotification('❌ Email non trovata', 'error');
+                return;
+            }
+            
+            if (!student.password) {
+                showNotification('⚠️ Account non ancora attivato!\nControlla la tua email per il link di attivazione.', 'error');
+                return;
+            }
+            
+            if (student.password !== password) {
+                showNotification('❌ Password errata', 'error');
+                return;
+            }
+            
+            // Login studente
+            currentUser = { 
+                email: student.email, 
+                role: 'student', 
+                name: `${student.name} ${student.surname}`,
+                studentId: student.id
+            };
+            
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('studentDashboard').classList.remove('hidden');
+            await loadStudentCourses();
         }
 
         function logout() {
@@ -1193,21 +1243,152 @@
         }
 
         // ==========================================
+        // ACCOUNT ACTIVATION FUNCTIONS
+        // ==========================================
+        
+        // Decodifica token attivazione
+        function decodeActivationToken(token) {
+            try {
+                const decoded = atob(token);
+                const [studentId, email, timestamp] = decoded.split('-');
+                return { studentId, email, timestamp: parseInt(timestamp) };
+            } catch (error) {
+                console.error('Errore decodifica token:', error);
+                return null;
+            }
+        }
+        
+        // Verifica ed elabora link attivazione
+        async function checkActivationLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const token = urlParams.get('token');
+            
+            if (action === 'activate' && token) {
+                const tokenData = decodeActivationToken(token);
+                
+                if (!tokenData) {
+                    showNotification('❌ Link di attivazione non valido', 'error');
+                    return;
+                }
+                
+                // Verifica se il token è scaduto (24 ore)
+                const hoursPassed = (Date.now() - tokenData.timestamp) / (1000 * 60 * 60);
+                if (hoursPassed > 24) {
+                    showNotification('⏰ Link di attivazione scaduto (valido 24 ore)', 'error');
+                    return;
+                }
+                
+                // Carica i dati degli studenti
+                await loadAllData();
+                
+                // Trova lo studente
+                const student = students.find(s => s.email === tokenData.email);
+                
+                if (!student) {
+                    showNotification('❌ Studente non trovato', 'error');
+                    return;
+                }
+                
+                if (student.password) {
+                    showNotification('⚠️ Account già attivato! Usa le tue credenziali per accedere.', 'error');
+                    return;
+                }
+                
+                // Mostra schermata attivazione
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('activationScreen').classList.remove('hidden');
+                document.getElementById('activationEmail').textContent = student.email;
+                document.getElementById('activationName').textContent = `${student.name} ${student.surname}`;
+                
+                // Salva dati studente in variabile globale temporanea
+                window.activatingStudent = student;
+                window.activationToken = token;
+            }
+        }
+        
+        // Attiva account con nuova password
+        async function activateAccount(event) {
+            event.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('❌ Le password non coincidono!', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showNotification('❌ La password deve contenere almeno 8 caratteri', 'error');
+                return;
+            }
+            
+            if (!window.activatingStudent) {
+                showNotification('❌ Errore: dati studente non trovati', 'error');
+                return;
+            }
+            
+            showLoading('Attivazione account in corso...');
+            
+            // Aggiorna studente con password
+            const updatedStudent = {
+                ...window.activatingStudent,
+                password: newPassword,
+                status: 'active',
+                activatedDate: new Date().toISOString()
+            };
+            
+            const result = await writeToSheets('Studenti', 'update', updatedStudent);
+            
+            hideLoading();
+            
+            if (result && result.status === 'success') {
+                // Aggiorna array locale
+                const index = students.findIndex(s => s.id === updatedStudent.id);
+                if (index !== -1) {
+                    students[index] = updatedStudent;
+                }
+                
+                // Pulisci variabili temporanee
+                delete window.activatingStudent;
+                delete window.activationToken;
+                
+                // Rimuovi parametri URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                showNotification('✅ Account attivato con successo! Ora puoi accedere.', 'success');
+                
+                // Torna al login dopo 2 secondi
+                setTimeout(() => {
+                    document.getElementById('activationScreen').classList.add('hidden');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('loginEmail').value = updatedStudent.email;
+                }, 2000);
+            } else {
+                showNotification('❌ Errore durante l\'attivazione. Riprova.', 'error');
+            }
+        }
+
+        // ==========================================
         // INITIALIZATION
         // ==========================================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             showAdminTab('students');
             console.log('🚀 Piattaforma caricata');
             console.log('🔗 Google Sheets URL:', GOOGLE_SHEETS_URL);
             
             // CARICA AUTOMATICAMENTE I DATI ANCHE PRIMA DEL LOGIN (per test)
             console.log('📥 Caricamento automatico dati...');
-            loadAllData().then(() => {
+            await loadAllData().then(() => {
                 console.log('✅ Dati caricati automaticamente');
             }).catch(err => {
                 console.error('❌ Errore caricamento automatico:', err);
             });
+            
+            // Verifica se c'è un link di attivazione
+            await checkActivationLink();
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a5132b576d29a1f',t:'MTc2NDI0MjAyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a513f8c74059a1f',t:'MTc2NDI0MjU1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
