@@ -877,7 +877,7 @@
                 return;
             }
             
-            // Salva in memoria locale del browser (LocalStorage)
+            // Salva SOLO in memoria locale del browser (LocalStorage)
             emailJSConfig.publicKey = publicKey;
             emailJSConfig.serviceId = serviceId;
             emailJSConfig.templateId = templateId;
@@ -885,27 +885,11 @@
             try {
                 localStorage.setItem('emailjs_config', JSON.stringify(emailJSConfig));
                 updateEmailStatusBadge();
-                showNotification('✅ Configurazione EmailJS salvata con successo!\n💾 Le credenziali sono salvate nel browser.', 'success');
+                showNotification('✅ Configurazione EmailJS salvata con successo!\n💾 Le credenziali sono salvate localmente nel tuo browser.', 'success');
+                console.log('✅ EmailJS configurato correttamente');
             } catch (error) {
                 console.error('Errore salvataggio localStorage:', error);
-                showNotification('⚠️ Configurazione salvata in memoria, ma potrebbe andare persa al refresh.', 'error');
-            }
-            
-            // Prova a salvare su Google Sheets (opzionale, non blocca se fallisce)
-            try {
-                const configData = {
-                    id: 'emailjs_config',
-                    publicKey: publicKey,
-                    serviceId: serviceId,
-                    templateId: templateId,
-                    updatedDate: new Date().toISOString(),
-                    updatedBy: currentUser.name
-                };
-                
-                await writeToSheets('Configurazioni', 'create', configData);
-                console.log('✅ Configurazione salvata anche su Google Sheets');
-            } catch (error) {
-                console.warn('⚠️ Non è stato possibile salvare su Google Sheets, ma la configurazione è attiva:', error);
+                showNotification('❌ Errore nel salvataggio della configurazione: ' + error.message, 'error');
             }
         }
         
@@ -950,7 +934,7 @@
                     document.getElementById('emailJSTemplateID').value = emailJSConfig.templateId;
                     
                     updateEmailStatusBadge();
-                    console.log('✅ Configurazione EmailJS caricata da localStorage');
+                    console.log('��� Configurazione EmailJS caricata da localStorage');
                     return;
                 }
             } catch (error) {
@@ -1301,5 +1285,5 @@
             console.log('🔗 Google Sheets URL:', GOOGLE_SHEETS_URL);
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a50b898f5699a1f',t:'MTc2NDIzNzAyNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a50be1ae0419a1f',t:'MTc2NDIzNzI0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
