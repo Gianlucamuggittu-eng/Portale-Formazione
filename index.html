@@ -106,7 +106,7 @@
       <p class="text-gray-600 mt-2">Crea le tabelle necessarie per la piattaforma</p>
      </div>
      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-      <p class="text-sm text-yellow-800">⚠️ Questa operazione va fatta <strong>solo la prima volta</strong>. Crea 3 tabelle: students, courses, progress.</p>
+      <p class="text-sm text-yellow-800">⚠️ Questa operazione va fatta <strong>solo la prima volta</strong>. Crea 4 tabelle: students, courses, progress, enrollments.</p>
      </div><button onclick="initializeDatabase()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold"> 🚀 Crea Tabelle </button> <button onclick="skipDatabaseSetup()" class="w-full mt-3 text-gray-600 hover:text-gray-800 text-sm"> Salta (già fatto) </button>
     </div>
    </div>
@@ -193,6 +193,7 @@
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Email</th>
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Azienda</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Corsi</th>
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Ruolo</th>
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Stato</th>
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Azioni</th>
@@ -282,7 +283,7 @@
        </div>
        <div class="space-y-3">
         <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-         <p class="text-sm text-gray-700 font-medium mb-2">���� Vantaggi Supabase:</p>
+         <p class="text-sm text-gray-700 font-medium mb-2">🎯 Vantaggi Supabase:</p>
          <ul class="text-xs text-gray-600 space-y-1 ml-4">
           <li>✅ <strong>Setup veloce</strong> - Solo 2 credenziali</li>
           <li>✅ <strong>PostgreSQL</strong> - Database professionale</li>
@@ -326,6 +327,25 @@
       <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addStudentModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"> Aggiungi </button>
       </div>
      </form>
+    </div>
+   </div>
+  </div><!-- Assign Courses Modal -->
+  <div id="assignCoursesModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto">
+    <div class="p-6">
+     <div class="flex justify-between items-center mb-6">
+      <div>
+       <h3 class="text-xl font-semibold text-gray-800">Assegna Corsi</h3>
+       <p class="text-sm text-gray-600 mt-1" id="assignStudentName"></p>
+      </div><button onclick="hideModal('assignCoursesModal')" class="text-gray-400 hover:text-gray-600"> <span class="text-2xl">×</span> </button>
+     </div>
+     <div class="mb-4">
+      <p class="text-sm font-medium text-gray-700 mb-3">Seleziona i corsi da assegnare:</p>
+      <div id="coursesCheckboxList" class="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+      </div>
+     </div>
+     <div class="flex space-x-3 pt-4"><button onclick="hideModal('assignCoursesModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button onclick="saveCoursesAssignment()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"> 💾 Salva Assegnazioni </button>
+     </div>
     </div>
    </div>
   </div><!-- Add Course Modal -->
@@ -449,7 +469,9 @@
         let allStudents = [];
         let allCourses = [];
         let allProgress = [];
+        let allEnrollments = [];
         let currentUser = null;
+        let currentAssigningStudent = null;
 
         function loadSupabaseConfig() {
             // Prima controlla se ci sono credenziali hardcoded valide
@@ -613,36 +635,76 @@ CREATE TABLE students (
   registration_date TIMESTAMP DEFAULT NOW()
 );
 
--- Tabella Corsi
+-- Tabella Corsi (con moduli in JSONB)
 CREATE TABLE courses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
-  has_test BOOLEAN DEFAULT false,
+  has_certificate BOOLEAN DEFAULT false,
+  modules JSONB DEFAULT '[]'::jsonb,
   status TEXT DEFAULT 'published',
   created_date TIMESTAMP DEFAULT NOW(),
   created_by TEXT
 );
 
--- Tabella Progressi
+-- Tabella Progressi (con progresso moduli in JSONB)
 CREATE TABLE progress (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   student_id UUID REFERENCES students(id) ON DELETE CASCADE,
   course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
   completed BOOLEAN DEFAULT false,
+  completed_modules INTEGER DEFAULT 0,
+  module_progress JSONB DEFAULT '{}'::jsonb,
   completion_date TIMESTAMP,
   score INTEGER
+);
+
+-- Tabella Iscrizioni (enrollments) ⭐ NUOVO!
+CREATE TABLE enrollments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+  enrolled_date TIMESTAMP DEFAULT NOW(),
+  assigned_by TEXT,
+  UNIQUE(student_id, course_id)
 );
 
 -- Abilita Row Level Security (importante!)
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
 
 -- Policy per permettere tutte le operazioni (per ora)
 CREATE POLICY "Enable all for students" ON students FOR ALL USING (true);
 CREATE POLICY "Enable all for courses" ON courses FOR ALL USING (true);
-CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code></pre>
+CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);
+CREATE POLICY "Enable all for enrollments" ON enrollments FOR ALL USING (true);
+
+-- Indici per query veloci
+CREATE INDEX idx_enrollments_student ON enrollments(student_id);
+CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <p class="text-sm text-yellow-800 font-semibold mb-2">⚠️ Se hai già creato le tabelle prima:</p>
+                            <p class="text-xs text-yellow-700 mb-2">Esegui SOLO queste righe per aggiungere la tabella enrollments:</p>
+                            <div class="bg-gray-900 text-gray-100 p-3 rounded mt-2 overflow-x-auto">
+                                <pre class="text-xs"><code>-- Aggiungi tabella enrollments (se altre tabelle già esistono)
+CREATE TABLE IF NOT EXISTS enrollments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+  enrolled_date TIMESTAMP DEFAULT NOW(),
+  assigned_by TEXT,
+  UNIQUE(student_id, course_id)
+);
+
+ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable all for enrollments" ON enrollments FOR ALL USING (true);
+CREATE INDEX idx_enrollments_student ON enrollments(student_id);
+CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
+                            </div>
                         </div>
                         
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -728,11 +790,131 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                 if (progressError) throw progressError;
                 allProgress = progress || [];
                 
-                console.log('📊 Dati caricati:', allStudents.length, 'studenti,', allCourses.length, 'corsi');
+                const { data: enrollments, error: enrollmentsError } = await supabase
+                    .from('enrollments')
+                    .select('*');
+                
+                if (enrollmentsError) throw enrollmentsError;
+                allEnrollments = enrollments || [];
+                
+                console.log('📊 Dati caricati:', allStudents.length, 'studenti,', allCourses.length, 'corsi,', allEnrollments.length, 'iscrizioni');
                 
             } catch (error) {
                 console.error('❌ Errore caricamento dati:', error);
                 throw error;
+            }
+        }
+
+        // ==========================================
+        // ENROLLMENT MANAGEMENT
+        // ==========================================
+
+        function getStudentEnrolledCourses(studentId) {
+            return allEnrollments
+                .filter(e => e.student_id === studentId)
+                .map(e => e.course_id);
+        }
+
+        function getStudentEnrollmentCount(studentId) {
+            return allEnrollments.filter(e => e.student_id === studentId).length;
+        }
+
+        function openAssignCoursesModal(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+            
+            currentAssigningStudent = student;
+            document.getElementById('assignStudentName').textContent = `${student.name} ${student.surname}`;
+            
+            const enrolledCourseIds = getStudentEnrolledCourses(studentId);
+            
+            const checkboxList = document.getElementById('coursesCheckboxList');
+            
+            if (allCourses.length === 0) {
+                checkboxList.innerHTML = '<p class="text-gray-500 text-center py-4">Nessun corso disponibile</p>';
+            } else {
+                checkboxList.innerHTML = allCourses.map(course => {
+                    const isEnrolled = enrolledCourseIds.includes(course.id);
+                    return `
+                        <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" 
+                                   class="course-checkbox rounded" 
+                                   data-course-id="${course.id}" 
+                                   ${isEnrolled ? 'checked' : ''}>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800">${course.title}</p>
+                                <p class="text-xs text-gray-500">${course.description || ''}</p>
+                            </div>
+                        </label>
+                    `;
+                }).join('');
+            }
+            
+            showModal('assignCoursesModal');
+        }
+
+        async function saveCoursesAssignment() {
+            if (!currentAssigningStudent) return;
+            
+            showLoading('Salvat aggio iscrizioni...');
+            
+            const checkboxes = document.querySelectorAll('.course-checkbox');
+            const selectedCourseIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.courseId);
+            
+            const currentEnrollments = allEnrollments.filter(e => e.student_id === currentAssigningStudent.id);
+            const currentCourseIds = currentEnrollments.map(e => e.course_id);
+            
+            // Corsi da aggiungere
+            const toAdd = selectedCourseIds.filter(id => !currentCourseIds.includes(id));
+            // Corsi da rimuovere
+            const toRemove = currentCourseIds.filter(id => !selectedCourseIds.includes(id));
+            
+            try {
+                // Aggiungi nuove iscrizioni
+                if (toAdd.length > 0) {
+                    const newEnrollments = toAdd.map(courseId => ({
+                        student_id: currentAssigningStudent.id,
+                        course_id: courseId,
+                        assigned_by: currentUser.name,
+                        enrolled_date: new Date().toISOString()
+                    }));
+                    
+                    const { data, error } = await supabase
+                        .from('enrollments')
+                        .insert(newEnrollments)
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    allEnrollments.push(...data);
+                }
+                
+                // Rimuovi iscrizioni
+                if (toRemove.length > 0) {
+                    const enrollmentsToDelete = currentEnrollments.filter(e => toRemove.includes(e.course_id));
+                    
+                    for (const enrollment of enrollmentsToDelete) {
+                        const { error } = await supabase
+                            .from('enrollments')
+                            .delete()
+                            .eq('id', enrollment.id);
+                        
+                        if (error) throw error;
+                        
+                        allEnrollments = allEnrollments.filter(e => e.id !== enrollment.id);
+                    }
+                }
+                
+                hideLoading();
+                hideModal('assignCoursesModal');
+                loadStudents();
+                showNotification(`✅ Iscrizioni aggiornate!\n${toAdd.length} corsi aggiunti, ${toRemove.length} rimossi.`, 'success');
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
 
@@ -998,15 +1180,23 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
         function loadStudents() {
             const tbody = document.getElementById('studentsTable');
             if (allStudents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nessuno studente presente</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Nessuno studente presente</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = allStudents.map(student => `
+            tbody.innerHTML = allStudents.map(student => {
+                const enrollmentCount = getStudentEnrollmentCount(student.id);
+                
+                return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 text-sm text-gray-900">${student.name} ${student.surname}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${student.email}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${student.company}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="openAssignCoursesModal('${student.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            📚 ${enrollmentCount} ${enrollmentCount === 1 ? 'corso' : 'corsi'}
+                        </button>
+                    </td>
                     <td class="px-4 py-3">
                         <select onchange="changeUserRole('${student.id}', this.value)" class="text-xs px-2 py-1 border border-gray-300 rounded-md">
                             <option value="student" ${(student.role || 'student') === 'student' ? 'selected' : ''}>👤 Studente</option>
@@ -1024,7 +1214,8 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                         <button onclick="deleteStudent('${student.id}')" class="text-red-600 hover:text-red-800 text-sm">Elimina</button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         async function addStudent(event) {
@@ -1162,6 +1353,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                     if (error) throw error;
                     
                     allStudents = allStudents.filter(s => s.id !== studentId);
+                    allEnrollments = allEnrollments.filter(e => e.student_id !== studentId);
                     hideLoading();
                     loadStudents();
                     showNotification(`✅ Studente "${student.name}" eliminato!`, 'success');
@@ -1339,7 +1531,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
             
             container.innerHTML = allCourses.map(course => {
                 const modules = course.modules || [];
-                const hasModules = modules.length > 0;
+                const enrolledCount = allEnrollments.filter(e => e.course_id === course.id).length;
                 
                 return `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -1353,6 +1545,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                                 </span>
                                 ${course.has_certificate ? '<span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">🎓 Certificato</span>' : ''}
                                 <span class="text-xs text-gray-600">📚 ${modules.length} moduli</span>
+                                <span class="text-xs text-gray-600">👥 ${enrolledCount} iscritti</span>
                             </div>
                             <div class="mt-3 flex space-x-2">
                                 <button onclick="openCourseEditor('${course.id}')" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
@@ -1432,6 +1625,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                     if (error) throw error;
                     
                     allCourses = allCourses.filter(c => c.id !== courseId);
+                    allEnrollments = allEnrollments.filter(e => e.course_id !== courseId);
                     hideLoading();
                     loadCourses();
                     showNotification(`✅ Corso eliminato!`, 'success');
@@ -1497,14 +1691,18 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
         function loadStudentCourses() {
             const container = document.getElementById('studentCoursesList');
             
-            if (allCourses.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Nessun corso disponibile</p></div>';
+            // Filtra solo i corsi a cui lo studente è iscritto
+            const enrolledCourseIds = getStudentEnrolledCourses(currentUser.studentId);
+            const enrolledCourses = allCourses.filter(c => 
+                c.status === 'published' && enrolledCourseIds.includes(c.id)
+            );
+            
+            if (enrolledCourses.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Non sei ancora iscritto a nessun corso.<br>Contatta l\'amministratore per l\'assegnazione.</p></div>';
                 return;
             }
             
-            const publishedCourses = allCourses.filter(c => c.status === 'published');
-            
-            container.innerHTML = publishedCourses.map(course => {
+            container.innerHTML = enrolledCourses.map(course => {
                 const progress = getStudentCourseProgress(course.id);
                 const modules = course.modules || [];
                 
@@ -1520,7 +1718,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                                 <span>${progress.completedModules}/${modules.length} moduli</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-600 h-2 rounded-full" style="width: ${(progress.completedModules / modules.length * 100)}%"></div>
+                                <div class="bg-green-600 h-2 rounded-full" style="width: ${modules.length > 0 ? (progress.completedModules / modules.length * 100) : 0}%"></div>
                             </div>
                         </div>
                     ` : ''}
@@ -2056,7 +2254,7 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
             const confirmPassword = document.getElementById('confirmPassword').value;
             
             if (newPassword !== confirmPassword) {
-                showNotification('�� Le password non coincidono!', 'error');
+                showNotification('❌ Le password non coincidono!', 'error');
                 return;
             }
             
@@ -2098,7 +2296,9 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
                 setTimeout(() => {
                     document.getElementById('activationScreen').classList.add('hidden');
                     document.getElementById('loginScreen').classList.remove('hidden');
-                    document.getElementById('loginEmail').value = allStudents[studentIndex].email;
+                    if (studentIndex !== -1) {
+                        document.getElementById('loginEmail').value = allStudents[studentIndex].email;
+                    }
                 }, 2000);
                 
             } catch (error) {
@@ -2501,5 +2701,5 @@ CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code>
             console.log('✅ Piattaforma pronta!');
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a639a89c7f1edce',t:'MTc2NDQzNTAyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a642da1c4834c44',t:'MTc2NDQ0MTA0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
