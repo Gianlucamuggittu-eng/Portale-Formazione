@@ -3,10 +3,11 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Piattaforma E-Learning con Google Sheets</title>
+  <title>EduPlatform - Versione Supabase</title>
   <script src="https://cdn.tailwindcss.com/3.3.0"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script><!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
         body {
             box-sizing: border-box;
@@ -36,7 +37,7 @@
         }
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
+            border-top: 4px solid #10b981;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -46,38 +47,79 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .upload-zone {
-            border: 2px dashed #cbd5e0;
-            transition: all 0.3s;
-        }
-        .upload-zone:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
     </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
- <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full"><!-- Loading Overlay -->
+ <body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-full"><!-- Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay hidden">
    <div class="text-center">
     <div class="spinner mx-auto mb-4"></div>
-    <p class="text-white text-lg" id="loadingText">Caricamento dati...</p>
+    <p class="text-white text-lg" id="loadingText">Caricamento...</p>
+    <p class="text-white text-sm mt-2 opacity-75" id="loadingSubtext">Attendere prego...</p>
    </div>
-  </div><!-- ⚠️ CONFIGURAZIONE GOOGLE SHEETS -->
-  <script>
-        // 🔧 INCOLLA QUI L'URL DEL TUO GOOGLE APPS SCRIPT
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynIy8SqTchM9PszhFGrvw_gnkYnTbY0Jn8sW2rEY88xPTVW-r7WuL2H1EgyanuQSflfg/exec';
-    </script><!-- Navigation -->
-  <nav class="bg-white shadow-lg border-b-4 border-blue-500">
+  </div><!-- Supabase Configuration Modal -->
+  <div id="supabaseConfigModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto">
+    <div class="p-8">
+     <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-white text-2xl">⚡</span>
+      </div>
+      <h2 class="text-3xl font-bold text-gray-800">Configura Supabase</h2>
+      <p class="text-gray-600 mt-2">Solo 2 credenziali - Setup in 5 minuti!</p>
+     </div>
+     <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <h3 class="font-semibold text-green-900 mb-2">📋 Come ottenere le credenziali:</h3>
+      <ol class="text-sm text-green-800 space-y-1 ml-4">
+       <li>1. Vai su <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" class="underline font-medium">supabase.com</a> e crea account gratis</li>
+       <li>2. Clicca <strong>"New Project"</strong></li>
+       <li>3. Scegli nome progetto (es: "eduplatform") e password database</li>
+       <li>4. Vai su <strong>"Settings"</strong> → <strong>"API"</strong></li>
+       <li>5. Copia <code class="bg-green-100 px-1 rounded">Project URL</code> e <code class="bg-green-100 px-1 rounded">anon public</code> key</li>
+      </ol>
+     </div>
+     <form onsubmit="saveSupabaseConfig(event)" class="space-y-4">
+      <div><label for="supabaseUrl" class="block text-sm font-medium text-gray-700 mb-1">Project URL</label> <input type="url" id="supabaseUrl" required placeholder="https://tuoprogetto.supabase.co" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+       <p class="text-xs text-gray-500 mt-1">Es: https://xyzabcdef.supabase.co</p>
+      </div>
+      <div><label for="supabaseKey" class="block text-sm font-medium text-gray-700 mb-1">Anon Public Key</label> <textarea id="supabaseKey" required placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
+       <p class="text-xs text-gray-500 mt-1">La chiave pubblica è sicura da condividere</p>
+      </div>
+      <div class="flex space-x-3 pt-4"><button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"> ⚡ Connetti Supabase </button>
+      </div>
+     </form>
+     <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <p class="text-xs text-blue-800">💡 <strong>Dopo aver connesso:</strong> Tornerai qui per creare automaticamente le tabelle del database.</p>
+     </div>
+    </div>
+   </div>
+  </div><!-- Database Setup Modal -->
+  <div id="dbSetupModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+    <div class="p-8">
+     <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-white text-2xl">🗄️</span>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800">Inizializza Database</h2>
+      <p class="text-gray-600 mt-2">Crea le tabelle necessarie per la piattaforma</p>
+     </div>
+     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <p class="text-sm text-yellow-800">⚠️ Questa operazione va fatta <strong>solo la prima volta</strong>. Crea 3 tabelle: students, courses, progress.</p>
+     </div><button onclick="initializeDatabase()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold"> 🚀 Crea Tabelle </button> <button onclick="skipDatabaseSetup()" class="w-full mt-3 text-gray-600 hover:text-gray-800 text-sm"> Salta (già fatto) </button>
+    </div>
+   </div>
+  </div><!-- Navigation -->
+  <nav class="bg-white shadow-lg border-b-4 border-green-500">
    <div class="max-w-7xl mx-auto px-4">
     <div class="flex justify-between items-center py-4">
      <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">🎓</span>
+      <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">🎓</span>
       </div>
-      <h1 class="text-2xl font-bold text-gray-800">EduPlatform <span class="text-sm text-green-600">��️ Cloud</span></h1>
+      <div>
+       <h1 class="text-2xl font-bold text-gray-800">EduPlatform <span class="text-sm text-green-600">⚡ Supabase</span></h1>
+      </div>
      </div>
      <div class="flex items-center space-x-4"><span id="currentUser" class="text-gray-600 font-medium"></span> <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"> Logout </button>
      </div>
@@ -87,16 +129,16 @@
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
     <div class="text-center mb-8">
-     <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-white text-2xl">🎓</span>
+     <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-white text-2xl">🎓</span>
      </div>
      <h2 class="text-3xl font-bold text-gray-800">Accedi alla Piattaforma</h2>
-     <p class="text-gray-600 mt-2">Dati salvati su Google Sheets ☁️</p>
+     <p class="text-gray-600 mt-2">Database Supabase ⚡</p>
     </div>
     <form onsubmit="login(event)" class="space-y-6">
-     <div><label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label> <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+     <div><label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label> <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
      </div>
-     <div><label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-     </div><button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"> Accedi </button>
+     <div><label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+     </div><button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"> Accedi </button>
     </form>
     <div class="mt-6 p-4 bg-gray-50 rounded-lg">
      <p class="text-sm text-gray-600 mb-2"><strong>Credenziali Demo:</strong></p>
@@ -104,7 +146,7 @@
      <p class="text-xs text-gray-500">Studente: studente@edu.com / student123</p>
     </div>
     <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-     <p class="text-xs text-green-800">✅ <strong>Dati Persistenti:</strong> I dati vengono salvati su Google Sheets e rimangono anche dopo il refresh!</p>
+     <p class="text-xs text-green-800">⚡ <strong>Supabase:</strong> PostgreSQL in cloud, più semplice di Firebase!</p>
     </div>
    </div>
   </div><!-- Account Activation Screen -->
@@ -116,9 +158,9 @@
      <h2 class="text-3xl font-bold text-gray-800">Crea la tua Password</h2>
      <p class="text-gray-600 mt-2">Benvenuto! Imposta la password per il tuo account</p>
     </div>
-    <div id="activationInfo" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-     <p class="text-sm text-blue-800"><strong>Email:</strong> <span id="activationEmail"></span></p>
-     <p class="text-sm text-blue-800 mt-1"><strong>Nome:</strong> <span id="activationName"></span></p>
+    <div id="activationInfo" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+     <p class="text-sm text-green-800"><strong>Email:</strong> <span id="activationEmail"></span></p>
+     <p class="text-sm text-green-800 mt-1"><strong>Nome:</strong> <span id="activationName"></span></p>
     </div>
     <form onsubmit="activateAccount(event)" class="space-y-6">
      <div><label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">Nuova Password</label> <input type="password" id="newPassword" required minlength="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Minimo 8 caratteri">
@@ -127,18 +169,15 @@
      <div><label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Conferma Password</label> <input type="password" id="confirmPassword" required minlength="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ripeti la password">
      </div><button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"> 🔐 Attiva Account </button>
     </form>
-    <div class="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-     <p class="text-xs text-yellow-800">💡 <strong>Suggerimento:</strong> Scegli una password sicura che ricorderai facilmente!</p>
-    </div>
    </div>
   </div><!-- Main Dashboard -->
   <div id="dashboard" class="hidden"><!-- Admin Dashboard -->
    <div id="adminDashboard" class="hidden max-w-7xl mx-auto p-6">
     <div class="mb-8">
      <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard Amministratore</h2>
-     <p class="text-gray-600">Gestisci studenti e corsi - Dati salvati su Google Sheets ☁️</p>
+     <p class="text-gray-600">Gestisci studenti e corsi - Database Supabase ⚡</p>
     </div><!-- Admin Navigation Tabs -->
-    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg"><button onclick="showAdminTab('students')" id="studentsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-blue-600 shadow-sm"> 👥 Gestione Studenti </button> <button onclick="showAdminTab('courses')" id="coursesTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📚 Gestione Corsi </button> <button onclick="showAdminTab('reports')" id="reportsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📊 Report </button> <button onclick="showAdminTab('settings')" id="settingsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> ⚙️ Impostazioni </button>
+    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg"><button onclick="showAdminTab('students')" id="studentsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-green-600 shadow-sm"> 👥 Gestione Studenti </button> <button onclick="showAdminTab('courses')" id="coursesTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📚 Gestione Corsi </button> <button onclick="showAdminTab('reports')" id="reportsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> 📊 Report </button> <button onclick="showAdminTab('settings')" id="settingsTab" class="flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800"> ⚙️ Impostazioni </button>
     </div><!-- Students Management -->
     <div id="studentsSection" class="fade-in">
      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -159,7 +198,7 @@
           <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Azioni</th>
          </tr>
         </thead>
-        <tbody id="studentsTable" class="divide-y divide-gray-200"><!-- Students will be populated here -->
+        <tbody id="studentsTable" class="divide-y divide-gray-200">
         </tbody>
        </table>
       </div>
@@ -170,7 +209,7 @@
       <div class="flex justify-between items-center mb-6">
        <h3 class="text-xl font-semibold text-gray-800">Gestione Corsi</h3><button onclick="showModal('addCourseModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"> ➕ Crea Corso </button>
       </div>
-      <div id="coursesList" class="space-y-4"><!-- Courses will be populated here -->
+      <div id="coursesList" class="space-y-4">
       </div>
      </div>
     </div><!-- Reports Section -->
@@ -180,9 +219,9 @@
        <div class="flex items-center justify-between">
         <div>
          <p class="text-sm font-medium text-gray-600">Studenti Totali</p>
-         <p id="totalStudents" class="text-3xl font-bold text-blue-600">0</p>
+         <p id="totalStudents" class="text-3xl font-bold text-green-600">0</p>
         </div>
-        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-blue-600 text-xl">👥</span>
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"><span class="text-green-600 text-xl">👥</span>
         </div>
        </div>
       </div>
@@ -190,9 +229,9 @@
        <div class="flex items-center justify-between">
         <div>
          <p class="text-sm font-medium text-gray-600">Corsi Attivi</p>
-         <p id="totalCourses" class="text-3xl font-bold text-green-600">0</p>
+         <p id="totalCourses" class="text-3xl font-bold text-blue-600">0</p>
         </div>
-        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"><span class="text-green-600 text-xl">📚</span>
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-blue-600 text-xl">📚</span>
         </div>
        </div>
       </div>
@@ -210,60 +249,47 @@
     </div><!-- Settings Section -->
     <div id="settingsSection" class="hidden">
      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-      <h3 class="text-xl font-semibold text-gray-800 mb-6">����️ Configurazione Piattaforma</h3><!-- EmailJS Configuration -->
+      <h3 class="text-xl font-semibold text-gray-800 mb-6">⚙️ Configurazione Piattaforma</h3><!-- EmailJS Configuration -->
       <div class="border-b border-gray-200 pb-6 mb-6">
        <div class="flex items-center justify-between mb-4">
         <div>
-         <h4 class="text-lg font-medium text-gray-800">�� Configurazione EmailJS</h4>
-         <p class="text-sm text-gray-600 mt-1">Imposta le credenziali per l'invio automatico delle email agli studenti</p>
+         <h4 class="text-lg font-medium text-gray-800">📧 Configurazione EmailJS</h4>
+         <p class="text-sm text-gray-600 mt-1">Imposta le credenziali per l'invio automatico delle email</p>
         </div>
         <div id="emailStatusBadge" class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
          ❌ Non Configurato
         </div>
        </div>
        <form onsubmit="saveEmailJSConfig(event)" class="space-y-4">
-        <div><label for="emailJSPublicKey" class="block text-sm font-medium text-gray-700 mb-2">Public Key</label> <input type="text" id="emailJSPublicKey" placeholder="es: xYz123AbC456" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Account → General → Public Key</p>
+        <div><label for="emailJSPublicKey" class="block text-sm font-medium text-gray-700 mb-2">Public Key</label> <input type="text" id="emailJSPublicKey" placeholder="es: xYz123AbC456" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
         </div>
-        <div><label for="emailJSServiceID" class="block text-sm font-medium text-gray-700 mb-2">Service ID</label> <input type="text" id="emailJSServiceID" placeholder="es: service_abc123" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Services → Il tuo Service ID</p>
+        <div><label for="emailJSServiceID" class="block text-sm font-medium text-gray-700 mb-2">Service ID</label> <input type="text" id="emailJSServiceID" placeholder="es: service_abc123" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
         </div>
-        <div><label for="emailJSTemplateID" class="block text-sm font-medium text-gray-700 mb-2">Template ID</label> <input type="text" id="emailJSTemplateID" placeholder="es: template_xyz789" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-         <p class="text-xs text-gray-500 mt-1">Vai su EmailJS → Email Templates → Il tuo Template ID</p>
-        </div>
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-         <h5 class="font-medium text-blue-900 mb-2">📋 Template Email Richiesto</h5>
-         <p class="text-sm text-blue-800 mb-2">Il tuo template EmailJS deve contenere questi parametri:</p>
-         <ul class="text-xs text-blue-700 space-y-1 ml-4">
-          <li>• <code class="bg-blue-100 px-1 rounded">{{student_name}}</code> - Nome completo studente</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{student_email}}</code> - Email studente</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{activation_link}}</code> - Link per creare password</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{platform_name}}</code> - Nome piattaforma</li>
-          <li>• <code class="bg-blue-100 px-1 rounded">{{company_name}}</code> - Nome azienda studente</li>
-         </ul>
+        <div><label for="emailJSTemplateID" class="block text-sm font-medium text-gray-700 mb-2">Template ID</label> <input type="text" id="emailJSTemplateID" placeholder="es: template_xyz789" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
         </div>
         <div class="flex space-x-3"><button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"> 💾 Salva Configurazione </button> <button type="button" onclick="testEmailJSConfig()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"> 🧪 Test Email </button>
         </div>
        </form>
-      </div><!-- Google Sheets Connection Test -->
-      <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl shadow-lg p-6 border-2 border-purple-200">
+      </div><!-- Supabase Info -->
+      <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-lg p-6 border-2 border-green-200">
        <div class="flex items-center justify-between mb-4">
         <div>
-         <h3 class="text-xl font-semibold text-gray-800 mb-1">🔗 Test Connessione Google Sheets</h3>
-         <p class="text-sm text-gray-600">Diagnostica problemi di connessione con il database</p>
+         <h3 class="text-xl font-semibold text-gray-800 mb-1">⚡ Supabase Database</h3>
+         <p class="text-sm text-gray-600">PostgreSQL in cloud - Più semplice di Firebase</p>
         </div>
-        <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center"><span class="text-white text-xl">🧪</span>
+        <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center"><span class="text-white text-xl">✅</span>
         </div>
        </div>
-       <div class="space-y-4">
+       <div class="space-y-3">
         <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-         <p class="text-sm text-gray-700 font-medium mb-2">📋 URL Configurato:</p>
-         <p id="sheetsUrlDisplay" class="text-xs text-gray-600 font-mono break-all p-2 bg-gray-50 rounded"></p>
-        </div><button onclick="testConnection()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg transition-all font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"> 🧪 TESTA CONNESSIONE ORA </button>
-        <div id="connectionResult" class="hidden"></div>
-        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-         <p class="text-xs text-blue-800">💡 <strong>Quando usare:</strong> Se non vedi i dati caricati o ricevi errori, usa questo test per capire esattamente dov'è il problema!</p>
-        </div>
+         <p class="text-sm text-gray-700 font-medium mb-2">🚀 Vantaggi Supabase:</p>
+         <ul class="text-xs text-gray-600 space-y-1 ml-4">
+          <li>✅ <strong>Setup veloce</strong> - Solo 2 credenziali</li>
+          <li>✅ <strong>PostgreSQL</strong> - Database professionale</li>
+          <li>✅ <strong>Dashboard intuitiva</strong> - Visualizza dati facilmente</li>
+          <li>✅ <strong>Gratis</strong> - 500 MB storage + 2 GB bandwidth</li>
+         </ul>
+        </div><button onclick="showModal('supabaseConfigModal')" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"> 🔧 Riconfigura Supabase </button>
        </div>
       </div>
      </div>
@@ -272,9 +298,9 @@
    <div id="studentDashboard" class="hidden max-w-7xl mx-auto p-6">
     <div class="mb-8">
      <h2 class="text-3xl font-bold text-gray-800 mb-2">I Miei Corsi</h2>
-     <p class="text-gray-600">Accedi ai tuoi corsi - Progressi salvati automaticamente ☁️</p>
+     <p class="text-gray-600">Accedi ai tuoi corsi - Sincronizzato con Supabase ⚡</p>
     </div>
-    <div id="studentCoursesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><!-- Student courses will be populated here -->
+    <div id="studentCoursesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     </div>
    </div>
   </div><!-- Add Student Modal -->
@@ -285,20 +311,19 @@
       <h3 class="text-xl font-semibold text-gray-800">Aggiungi Studente</h3><button onclick="hideModal('addStudentModal')" class="text-gray-400 hover:text-gray-600"> <span class="text-2xl">×</span> </button>
      </div>
      <form onsubmit="addStudent(event)" class="space-y-4">
-      <div><label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Nome</label> <input type="text" id="studentName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Nome</label> <input type="text" id="studentName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentSurname" class="block text-sm font-medium text-gray-700 mb-1">Cognome</label> <input type="text" id="studentSurname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentSurname" class="block text-sm font-medium text-gray-700 mb-1">Cognome</label> <input type="text" id="studentSurname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label> <input type="email" id="studentEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label> <input type="email" id="studentEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefono</label> <input type="tel" id="studentPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefono</label> <input type="tel" id="studentPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentCompany" class="block text-sm font-medium text-gray-700 mb-1">Azienda</label> <input type="text" id="studentCompany" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="studentCompany" class="block text-sm font-medium text-gray-700 mb-1">Azienda</label> <input type="text" id="studentCompany" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentRole" class="block text-sm font-medium text-gray-700 mb-1">Ruolo</label> <select id="studentRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"> <option value="student">👤 Studente</option> <option value="admin">👑 Amministratore</option> </select>
-       <p class="text-xs text-gray-500 mt-1">Gli admin possono gestire studenti e corsi</p>
+      <div><label for="studentRole" class="block text-sm font-medium text-gray-700 mb-1">Ruolo</label> <select id="studentRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"> <option value="student">👤 Studente</option> <option value="admin">👑 Amministratore</option> </select>
       </div>
-      <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addStudentModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"> Aggiungi </button>
+      <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addStudentModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"> Aggiungi </button>
       </div>
      </form>
     </div>
@@ -311,13 +336,13 @@
       <h3 class="text-xl font-semibold text-gray-800">Crea Nuovo Corso</h3><button onclick="hideModal('addCourseModal')" class="text-gray-400 hover:text-gray-600"> <span class="text-2xl">×</span> </button>
      </div>
      <form onsubmit="addCourse(event)" class="space-y-4">
-      <div><label for="courseTitle" class="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label> <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div><label for="courseTitle" class="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label> <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="courseDescription" class="block text-sm font-medium text-gray-700 mb-1">Descrizione</label> <textarea id="courseDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+      <div><label for="courseDescription" class="block text-sm font-medium text-gray-700 mb-1">Descrizione</label> <textarea id="courseDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
       </div>
       <div class="flex items-center space-x-2"><input type="checkbox" id="courseHasTest" class="rounded"> <label for="courseHasTest" class="text-sm font-medium text-gray-700">Il corso include un test finale</label>
       </div>
-      <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addCourseModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"> Crea Corso </button>
+      <div class="flex space-x-3 pt-4"><button type="button" onclick="hideModal('addCourseModal')" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"> Annulla </button> <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"> Crea Corso </button>
       </div>
      </form>
     </div>
@@ -325,10 +350,253 @@
   </div>
   <script>
         // ==========================================
+        // SUPABASE CONFIGURATION & INITIALIZATION
+        // ==========================================
+        
+        let supabase = null;
+        let allStudents = [];
+        let allCourses = [];
+        let allProgress = [];
+        let currentUser = null;
+
+        function loadSupabaseConfig() {
+            const savedConfig = localStorage.getItem('supabase_config');
+            if (savedConfig) {
+                return JSON.parse(savedConfig);
+            }
+            return null;
+        }
+
+        function saveSupabaseConfig(event) {
+            event.preventDefault();
+            
+            const config = {
+                url: document.getElementById('supabaseUrl').value.trim(),
+                key: document.getElementById('supabaseKey').value.trim()
+            };
+            
+            localStorage.setItem('supabase_config', JSON.stringify(config));
+            hideModal('supabaseConfigModal');
+            showNotification('✅ Configurazione salvata! Ricarica la pagina.', 'success');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+
+        async function initSupabase() {
+            const config = loadSupabaseConfig();
+            
+            if (!config) {
+                showModal('supabaseConfigModal');
+                return false;
+            }
+            
+            try {
+                // Crea client Supabase
+                supabase = window.supabase.createClient(config.url, config.key);
+                console.log('✅ Supabase connesso');
+                
+                // Carica dati in background (non blocca)
+                loadAllData().catch(err => {
+                    console.warn('⚠️ Database vuoto:', err.message);
+                });
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Errore Supabase:', error);
+                showNotification(`❌ Errore: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function initializeDatabase() {
+            showLoading('Creazione tabelle...');
+            
+            try {
+                const { data: existingStudents, error: studentsCheckError } = await supabase
+                    .from('students')
+                    .select('id')
+                    .limit(1);
+                
+                if (!studentsCheckError) {
+                    localStorage.setItem('supabase_db_setup_done', 'true');
+                    hideLoading();
+                    hideModal('dbSetupModal');
+                    showNotification('✅ Database già inizializzato!', 'success');
+                    
+                    await loadAllData();
+                    return;
+                }
+                
+                hideLoading();
+                hideModal('dbSetupModal');
+                
+                const instructionsModal = document.createElement('div');
+                instructionsModal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                instructionsModal.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-full overflow-y-auto p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 Crea le Tabelle in Supabase</h2>
+                        <p class="text-gray-600 mb-4">Segui questi passaggi nella dashboard di Supabase:</p>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <ol class="text-sm text-gray-800 space-y-2 ml-4">
+                                <li><strong>1.</strong> Vai su <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">app.supabase.com</a></li>
+                                <li><strong>2.</strong> Seleziona il tuo progetto</li>
+                                <li><strong>3.</strong> Clicca su "SQL Editor" nel menu laterale</li>
+                                <li><strong>4.</strong> Copia e incolla questo codice SQL:</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto">
+                            <pre class="text-xs"><code>-- Tabella Studenti
+CREATE TABLE students (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  surname TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  phone TEXT,
+  company TEXT NOT NULL,
+  role TEXT DEFAULT 'student',
+  status TEXT DEFAULT 'active',
+  password TEXT,
+  registration_date TIMESTAMP DEFAULT NOW()
+);
+
+-- Tabella Corsi
+CREATE TABLE courses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  has_test BOOLEAN DEFAULT false,
+  status TEXT DEFAULT 'published',
+  created_date TIMESTAMP DEFAULT NOW(),
+  created_by TEXT
+);
+
+-- Tabella Progressi
+CREATE TABLE progress (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+  completed BOOLEAN DEFAULT false,
+  completion_date TIMESTAMP,
+  score INTEGER
+);
+
+-- Abilita Row Level Security (importante!)
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
+
+-- Policy per permettere tutte le operazioni (per ora)
+CREATE POLICY "Enable all for students" ON students FOR ALL USING (true);
+CREATE POLICY "Enable all for courses" ON courses FOR ALL USING (true);
+CREATE POLICY "Enable all for progress" ON progress FOR ALL USING (true);</code></pre>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-yellow-800">⚠️ <strong>Importante:</strong> Dopo aver eseguito il codice SQL, clicca "Fatto" qui sotto.</p>
+                        </div>
+                        
+                        <button onclick="completeDatabaseSetup()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold">
+                            ✅ Fatto - Ho creato le tabelle
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(instructionsModal);
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
+            }
+        }
+
+        async function completeDatabaseSetup() {
+            const modal = document.querySelector('.modal-backdrop');
+            if (modal) modal.remove();
+            
+            showLoading('Verifica tabelle...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('id')
+                    .limit(1);
+                
+                if (error) {
+                    hideLoading();
+                    showNotification('❌ Tabelle non trovate. Verifica di aver eseguito il codice SQL correttamente.', 'error');
+                    return;
+                }
+                
+                localStorage.setItem('supabase_db_setup_done', 'true');
+                
+                await loadAllData();
+                
+                hideLoading();
+                showNotification('✅ Database pronto! Piattaforma operativa.', 'success');
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore verifica: ' + error.message, 'error');
+            }
+        }
+
+        function skipDatabaseSetup() {
+            localStorage.setItem('supabase_db_setup_done', 'true');
+            hideModal('dbSetupModal');
+            
+            loadAllData().catch(() => {
+                console.log('DB vuoto');
+            });
+        }
+
+        async function loadAllData() {
+            try {
+                const { data: students, error: studentsError } = await supabase
+                    .from('students')
+                    .select('*')
+                    .order('registration_date', { ascending: false });
+                
+                if (studentsError) throw studentsError;
+                allStudents = students || [];
+                
+                const { data: courses, error: coursesError } = await supabase
+                    .from('courses')
+                    .select('*')
+                    .order('created_date', { ascending: false });
+                
+                if (coursesError) throw coursesError;
+                allCourses = courses || [];
+                
+                const { data: progress, error: progressError } = await supabase
+                    .from('progress')
+                    .select('*');
+                
+                if (progressError) throw progressError;
+                allProgress = progress || [];
+                
+                console.log('📊 Dati caricati:', allStudents.length, 'studenti,', allCourses.length, 'corsi');
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento dati:', error);
+                throw error;
+            }
+        }
+
+        // ==========================================
         // EMAILJS FUNCTIONS
         // ==========================================
 
-        // Inizializza EmailJS
+        let emailJSConfig = {
+            publicKey: '',
+            serviceId: '',
+            templateId: ''
+        };
+
         function initEmailJS() {
             if (typeof emailjs !== 'undefined' && emailJSConfig.publicKey && emailJSConfig.serviceId && emailJSConfig.templateId) {
                 emailjs.init(emailJSConfig.publicKey);
@@ -337,28 +605,25 @@
             return false;
         }
 
-        // Verifica se EmailJS è configurato
         function isEmailJSConfigured() {
             return emailJSConfig.publicKey && emailJSConfig.serviceId && emailJSConfig.templateId;
         }
 
-        // Genera token per attivazione account
         function generateActivationToken(studentId, email) {
             const timestamp = Date.now();
             const data = `${studentId}-${email}-${timestamp}`;
             return btoa(data);
         }
 
-        // Invia email di benvenuto con link attivazione
         async function sendWelcomeEmail(student) {
             if (!initEmailJS()) {
-                console.warn('EmailJS non configurato. Email non inviata.');
+                console.warn('EmailJS non configurato.');
                 return { success: false, message: 'EmailJS non configurato' };
             }
 
             try {
                 const activationToken = generateActivationToken(student.id, student.email);
-                const activationLink = `${window.location.origin}${window.location.pathname}?action=activate&token=${activationToken}`;
+                const activationLink = `${window.location.origin}${window.location.pathname}?action=activate&token=${activationToken}&id=${student.id}`;
 
                 const templateParams = {
                     student_name: `${student.name} ${student.surname}`,
@@ -374,8 +639,7 @@
                     templateParams
                 );
 
-                console.log('����� Email inviata con successo:', response);
-                return { success: true, message: 'Email inviata con successo' };
+                return { success: true, message: 'Email inviata' };
 
             } catch (error) {
                 console.error('❌ Errore invio email:', error);
@@ -383,518 +647,6 @@
             }
         }
 
-        // ==========================================
-        // GOOGLE SHEETS API FUNCTIONS
-        // ==========================================
-
-        // Mostra/nascondi loading
-        function showLoading(message = 'Caricamento dati...') {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingText').textContent = message;
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        // Test connessione Google Sheets con diagnostica dettagliata
-        async function testConnection() {
-            const resultDiv = document.getElementById('connectionResult');
-            resultDiv.classList.remove('hidden');
-            resultDiv.className = 'p-4 rounded-lg bg-blue-50 border border-blue-200';
-            resultDiv.innerHTML = '<p class="text-sm text-blue-800">🔄 Controllo connessione in corso...</p>';
-            
-            try {
-                // Test 1: Verifica URL
-                if (!GOOGLE_SHEETS_URL || GOOGLE_SHEETS_URL.includes('TUO_ID') || GOOGLE_SHEETS_URL.length < 50) {
-                    resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                    resultDiv.innerHTML = `
-                        <p class="text-sm text-red-800 font-medium mb-2">❌ URL non configurato correttamente</p>
-                        <p class="text-xs text-red-700 mb-3">L'URL di Google Sheets non è valido o non è stato configurato.</p>
-                        <div class="bg-red-100 p-3 rounded text-xs text-red-800">
-                            <p class="font-medium mb-2">✅ SOLUZIONE:</p>
-                            <ol class="list-decimal ml-4 space-y-1">
-                                <li>Vai su Google Apps Script</li>
-                                <li>Clicca "Deploy" → "NUOVA distribuzione"</li>
-                                <li>Scegli tipo "Web app"</li>
-                                <li>Imposta "Chi ha accesso" su <strong>"Chiunque"</strong></li>
-                                <li>Copia l'URL (inizia con https://script.google.com/macros/s/...)</li>
-                                <li>Incollalo nel codice alla riga ~100</li>
-                            </ol>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Test 2: Tentativo di connessione
-                const testUrl = `${GOOGLE_SHEETS_URL}?action=read&sheet=Studenti&_t=${Date.now()}`;
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const response = await fetch(testUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                    cache: 'no-cache',
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.status === 'error') {
-                    resultDiv.className = 'p-4 rounded-lg bg-orange-50 border border-orange-200';
-                    resultDiv.innerHTML = `
-                        <p class="text-sm text-orange-800 font-medium mb-2">⚠️ Errore dal server Google Sheets</p>
-                        <p class="text-xs text-orange-700 mb-2">Messaggio: ${result.message}</p>
-                        <div class="bg-orange-100 p-3 rounded text-xs text-orange-800">
-                            <p class="font-medium mb-2">🔍 POSSIBILI CAUSE:</p>
-                            <ul class="list-disc ml-4 space-y-1">
-                                <li>Il foglio "Studenti" non esiste nel Google Sheet</li>
-                                <li>Le intestazioni non corrispondono</li>
-                                <li>Errore nello script Google Apps Script</li>
-                            </ul>
-                        </div>
-                    `;
-                } else if (result.status === 'success') {
-                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = `
-                        <p class="text-sm text-green-800 font-medium mb-2">✅ Connessione perfetta!</p>
-                        <p class="text-xs text-green-700 mb-2">Il collegamento con Google Sheets funziona correttamente.</p>
-                        <div class="bg-green-100 p-3 rounded text-xs text-green-800">
-                            <p class="font-medium mb-1">📊 Dati trovati:</p>
-                            <ul class="list-disc ml-4">
-                                <li>Studenti caricati: <strong>${result.data ? result.data.length : 0}</strong></li>
-                            </ul>
-                            <p class="mt-2">Ora puoi aggiungere studenti e corsi! 🚀</p>
-                        </div>
-                    `;
-                }
-                
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    resultDiv.className = 'p-4 rounded-lg bg-yellow-50 border border-yellow-200';
-                    resultDiv.innerHTML = `
-                        <p class="text-sm text-yellow-800 font-medium mb-2">⏱️ Timeout connessione</p>
-                        <p class="text-xs text-yellow-700 mb-3">Il server impiega troppo tempo a rispondere.</p>
-                    `;
-                } else {
-                    resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                    resultDiv.innerHTML = `
-                        <p class="text-sm text-red-800 font-medium mb-2">❌ Errore connessione</p>
-                        <p class="text-xs text-red-700 mb-2">Messaggio: ${error.message}</p>
-                    `;
-                }
-            }
-        }
-
-        // Leggi dati da Google Sheets
-        async function readFromSheets(sheetName) {
-            try {
-                showLoading(`Caricamento ${sheetName}...`);
-                
-                const url = `${GOOGLE_SHEETS_URL}?action=read&sheet=${sheetName}&_=${Date.now()}`;
-                
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                    cache: 'no-cache'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                hideLoading();
-                
-                if (result.status === 'success') {
-                    console.log(`✅ ${sheetName} caricato:`, result.data.length, 'record');
-                    return result.data || [];
-                } else {
-                    console.error(`❌ Errore ${sheetName}:`, result.message);
-                    showNotification(`Errore caricamento ${sheetName}: ${result.message}`, 'error');
-                    return [];
-                }
-            } catch (error) {
-                hideLoading();
-                console.error(`❌ Errore connessione ${sheetName}:`, error);
-                showNotification(
-                    `⚠️ Impossibile caricare ${sheetName}\n\nVai su Impostazioni → Test Connessione per diagnosticare il problema.`,
-                    'error'
-                );
-                return [];
-            }
-        }
-
-        // Scrivi dati su Google Sheets (METODO POST con redirect follow)
-        async function writeToSheets(sheetName, action, data) {
-            try {
-                showLoading('Salvataggio in corso...');
-                
-                console.log(`📤 Invio ${action} a ${sheetName}:`, data);
-                
-                // Usa POST con redirect: 'follow' per gestire automaticamente i redirect di Google
-                const response = await fetch(GOOGLE_SHEETS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        sheet: sheetName,
-                        data: data
-                    }),
-                    redirect: 'follow', // Segue automaticamente i redirect di Google
-                    mode: 'no-cors' // Evita problemi CORS
-                });
-                
-                // Con no-cors non possiamo leggere la risposta, quindi assumiamo successo
-                hideLoading();
-                console.log(`✅ Richiesta ${action} inviata a ${sheetName}`);
-                
-                // Attendiamo 2 secondi per dare tempo a Google Sheets di processare
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                return { status: 'success' };
-                
-            } catch (error) {
-                hideLoading();
-                console.error(`❌ Errore ${action} su ${sheetName}:`, error);
-                showNotification(`❌ Errore salvataggio: ${error.message}`, 'error');
-                return null;
-            }
-        }
-
-        // ==========================================
-        // EXCEL UPLOAD FUNCTIONS
-        // ==========================================
-
-        function downloadExcelTemplate() {
-            try {
-                if (typeof XLSX === 'undefined') {
-                    showNotification('❌ Errore: Libreria Excel non caricata. Ricarica la pagina.', 'error');
-                    return;
-                }
-                
-                const wb = XLSX.utils.book_new();
-                
-                const wsData = [
-                    ['Nome', 'Cognome', 'Email', 'Telefono', 'Azienda', 'Ruolo'],
-                    ['Mario', 'Rossi', 'mario.rossi@esempio.com', '3331234567', 'Azienda ABC', 'student'],
-                    ['Laura', 'Bianchi', 'laura.bianchi@esempio.com', '3347654321', 'Azienda XYZ', 'admin'],
-                    ['', '', '', '', '', '']
-                ];
-                
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                
-                ws['!cols'] = [
-                    {wch: 15},
-                    {wch: 15},
-                    {wch: 30},
-                    {wch: 15},
-                    {wch: 20},
-                    {wch: 15}
-                ];
-                
-                XLSX.utils.book_append_sheet(wb, ws, 'Studenti');
-                XLSX.writeFile(wb, 'template_studenti.xlsx');
-                
-                showNotification('📥 Template scaricato! Compilalo e ricaricalo nella piattaforma.', 'success');
-            } catch (error) {
-                console.error('Errore download template:', error);
-                showNotification('❌ Errore durante il download del template: ' + error.message, 'error');
-            }
-        }
-
-        async function handleExcelUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            showLoading('Lettura file Excel...');
-            
-            const reader = new FileReader();
-            
-            reader.onload = async function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    hideLoading();
-                    
-                    if (jsonData.length === 0) {
-                        showNotification('⚠️ Il file Excel è vuoto!', 'error');
-                        return;
-                    }
-                    
-                    await importStudentsFromExcel(jsonData);
-                    
-                } catch (error) {
-                    hideLoading();
-                    console.error('Errore lettura Excel:', error);
-                    showNotification('❌ Errore nella lettura del file Excel. Verifica il formato!', 'error');
-                }
-            };
-            
-            reader.readAsArrayBuffer(file);
-            event.target.value = '';
-        }
-
-        async function importStudentsFromExcel(excelData) {
-            showLoading(`Importazione ${excelData.length} studenti...`);
-            
-            let successCount = 0;
-            let errorCount = 0;
-            let emailsSent = 0;
-            let emailsFailed = 0;
-            const errors = [];
-            const importedStudents = [];
-            
-            console.log('📊 Dati Excel ricevuti:', excelData);
-            console.log('�� Colonne presenti:', Object.keys(excelData[0] || {}));
-            
-            for (let i = 0; i < excelData.length; i++) {
-                const row = excelData[i];
-                
-                console.log(`\n🔍 Elaborazione riga ${i + 2}:`, row);
-                
-                if (!row.Nome || !row.Cognome || !row.Email || !row.Azienda) {
-                    errorCount++;
-                    errors.push(`Riga ${i + 2}: Campi obbligatori mancanti`);
-                    console.error(`❌ Riga ${i + 2}: Campi mancanti`);
-                    continue;
-                }
-                
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(row.Email)) {
-                    errorCount++;
-                    errors.push(`Riga ${i + 2}: Email non valida`);
-                    console.error(`❌ Riga ${i + 2}: Email non valida`);
-                    continue;
-                }
-                
-                const duplicate = students.find(s => s.email.toLowerCase() === row.Email.toLowerCase());
-                if (duplicate) {
-                    errorCount++;
-                    errors.push(`Riga ${i + 2}: Email già esistente`);
-                    console.error(`❌ Riga ${i + 2}: Email duplicata`);
-                    continue;
-                }
-                
-                const newStudent = {
-                    id: Date.now().toString() + '_' + i,
-                    name: row.Nome.trim(),
-                    surname: row.Cognome.trim(),
-                    email: row.Email.trim().toLowerCase(),
-                    phone: row.Telefono ? row.Telefono.toString().trim() : '',
-                    company: row.Azienda.trim(),
-                    role: row.Ruolo && (row.Ruolo.toLowerCase() === 'admin' || row.Ruolo.toLowerCase() === 'amministratore') ? 'admin' : 'student',
-                    status: 'active',
-                    registrationDate: new Date().toISOString()
-                };
-                
-                console.log(`📤 Invio studente:`, newStudent);
-                
-                const result = await writeToSheets('Studenti', 'create', newStudent);
-                
-                if (result && result.status === 'success') {
-                    students.push(newStudent);
-                    importedStudents.push(newStudent);
-                    successCount++;
-                    console.log(`✅ Riga ${i + 2}: Salvato!`);
-                } else {
-                    errorCount++;
-                    const errorMsg = result ? result.message : 'Nessuna risposta';
-                    errors.push(`Riga ${i + 2}: ${errorMsg}`);
-                    console.error(`❌ Riga ${i + 2}: Errore -`, errorMsg);
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-            
-            if (importedStudents.length > 0) {
-                showLoading(`Invio email a ${importedStudents.length} studenti...`);
-                
-                for (const student of importedStudents) {
-                    const emailResult = await sendWelcomeEmail(student);
-                    if (emailResult.success) {
-                        emailsSent++;
-                    } else {
-                        emailsFailed++;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            }
-            
-            hideLoading();
-            loadStudents();
-            
-            let message = `✅ Importazione completata!\n\n`;
-            message += `✔️ Studenti importati: ${successCount}\n`;
-            message += `📧 Email inviate: ${emailsSent}\n`;
-            if (emailsFailed > 0) {
-                message += `⚠️ Email non inviate: ${emailsFailed}\n`;
-            }
-            if (errorCount > 0) {
-                message += `❌ Errori: ${errorCount}\n\n`;
-                message += `Dettagli:\n${errors.slice(0, 5).join('\n')}`;
-                if (errors.length > 5) {
-                    message += `\n... e altri ${errors.length - 5} errori`;
-                }
-            }
-            
-            showNotification(message, successCount > 0 ? 'success' : 'error');
-        }
-
-        // Notifiche toast
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg ${
-                type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 
-                'bg-blue-500'
-            } text-white`;
-            notification.style.whiteSpace = 'pre-line';
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, type === 'error' ? 8000 : 5000);
-        }
-
-        // ==========================================
-        // GLOBAL STATE
-        // ==========================================
-        let currentUser = null;
-        let students = [];
-        let courses = [];
-        let progressData = [];
-        let emailJSConfig = {
-            publicKey: '',
-            serviceId: '',
-            templateId: ''
-        };
-
-        // ==========================================
-        // AUTHENTICATION
-        // ==========================================
-        async function login(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            // Account admin predefinito
-            if (email === 'admin@edu.com' && password === 'admin123') {
-                currentUser = { email, role: 'admin', name: 'Amministratore' };
-                document.getElementById('currentUser').textContent = currentUser.name;
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                document.getElementById('adminDashboard').classList.remove('hidden');
-                await loadAllData();
-                return;
-            }
-            
-            // Carica studenti da Google Sheets se non già caricati
-            if (students.length === 0) {
-                await loadAllData();
-            }
-            
-            // Cerca studente nel database
-            const student = students.find(s => s.email.toLowerCase() === email);
-            
-            if (!student) {
-                showNotification('❌ Email non trovata', 'error');
-                return;
-            }
-            
-            if (!student.password) {
-                showNotification('⚠️ Account non ancora attivato!\nControlla la tua email per il link di attivazione.', 'error');
-                return;
-            }
-            
-            if (student.password !== password) {
-                showNotification('❌ Password errata', 'error');
-                return;
-            }
-            
-            // Login utente (admin o studente) - DEBUGGING
-            const userRole = student.role || 'student';
-            
-            console.log('🔍 LOGIN DEBUG:', {
-                studentEmail: student.email,
-                studentRole: student.role,
-                finalRole: userRole,
-                isAdmin: userRole === 'admin'
-            });
-            
-            currentUser = { 
-                email: student.email, 
-                role: userRole, 
-                name: `${student.name} ${student.surname}`,
-                studentId: student.id
-            };
-            
-            document.getElementById('currentUser').textContent = currentUser.name;
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            
-            console.log('👤 Ruolo finale currentUser:', currentUser.role);
-            
-            if (currentUser.role === 'admin') {
-                console.log('✅ Caricamento ADMIN dashboard');
-                document.getElementById('adminDashboard').classList.remove('hidden');
-                document.getElementById('studentDashboard').classList.add('hidden');
-                await loadAllData();
-            } else {
-                console.log('✅ Caricamento STUDENT dashboard');
-                document.getElementById('studentDashboard').classList.remove('hidden');
-                document.getElementById('adminDashboard').classList.add('hidden');
-                await loadStudentCourses();
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('adminDashboard').classList.add('hidden');
-            document.getElementById('studentDashboard').classList.add('hidden');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-        }
-
-        // ==========================================
-        // DATA LOADING
-        // ==========================================
-        async function loadAllData() {
-            students = await readFromSheets('Studenti');
-            courses = await readFromSheets('Corsi');
-            progressData = await readFromSheets('Progressi');
-            await loadEmailJSConfig();
-            
-            loadStudents();
-            loadCourses();
-            updateStats();
-        }
-
-        // ==========================================
-        // SETTINGS FUNCTIONS
-        // ==========================================
-        
         async function saveEmailJSConfig(event) {
             event.preventDefault();
             
@@ -916,11 +668,10 @@
                 updateEmailStatusBadge();
                 showNotification('✅ Configurazione EmailJS salvata!', 'success');
             } catch (error) {
-                console.error('Errore salvataggio:', error);
-                showNotification('❌ Errore salvataggio: ' + error.message, 'error');
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
-        
+
         async function testEmailJSConfig() {
             if (!isEmailJSConfigured()) {
                 showNotification('⚠️ Configura EmailJS prima di testare!', 'error');
@@ -941,32 +692,30 @@
             hideLoading();
             
             if (emailResult.success) {
-                showNotification(`✅ Email di test inviata!\n📧 Controlla ${currentUser.email}`, 'success');
+                showNotification(`✅ Email di test inviata a ${currentUser.email}`, 'success');
             } else {
                 showNotification(`❌ Errore: ${emailResult.message}`, 'error');
             }
         }
-        
+
         async function loadEmailJSConfig() {
             try {
                 const savedConfig = localStorage.getItem('emailjs_config');
                 if (savedConfig) {
                     const config = JSON.parse(savedConfig);
-                    emailJSConfig.publicKey = config.publicKey || '';
-                    emailJSConfig.serviceId = config.serviceId || '';
-                    emailJSConfig.templateId = config.templateId || '';
+                    emailJSConfig = config;
                     
-                    document.getElementById('emailJSPublicKey').value = emailJSConfig.publicKey;
-                    document.getElementById('emailJSServiceID').value = emailJSConfig.serviceId;
-                    document.getElementById('emailJSTemplateID').value = emailJSConfig.templateId;
+                    document.getElementById('emailJSPublicKey').value = emailJSConfig.publicKey || '';
+                    document.getElementById('emailJSServiceID').value = emailJSConfig.serviceId || '';
+                    document.getElementById('emailJSTemplateID').value = emailJSConfig.templateId || '';
                     
                     updateEmailStatusBadge();
                 }
             } catch (error) {
-                console.warn('Errore caricamento config:', error);
+                console.warn('Errore caricamento config EmailJS:', error);
             }
         }
-        
+
         function updateEmailStatusBadge() {
             const badge = document.getElementById('emailStatusBadge');
             if (isEmailJSConfigured()) {
@@ -979,46 +728,138 @@
         }
 
         // ==========================================
-        // ADMIN FUNCTIONS
+        // UI HELPER FUNCTIONS
         // ==========================================
-        function showAdminTab(tab) {
-            document.getElementById('studentsSection').classList.add('hidden');
-            document.getElementById('coursesSection').classList.add('hidden');
-            document.getElementById('reportsSection').classList.add('hidden');
-            document.getElementById('settingsSection').classList.add('hidden');
-            
-            document.getElementById('studentsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
-            document.getElementById('coursesTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
-            document.getElementById('reportsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
-            document.getElementById('settingsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
-            
-            document.getElementById(tab + 'Section').classList.remove('hidden');
-            document.getElementById(tab + 'Tab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-blue-600 shadow-sm';
-            
-            if (tab === 'reports') {
-                updateStats();
-            }
-            
-            if (tab === 'settings') {
-                updateEmailStatusBadge();
-                document.getElementById('sheetsUrlDisplay').textContent = GOOGLE_SHEETS_URL.substring(0, 80) + '...';
-            }
+
+        function showLoading(message = 'Caricamento...', subText = 'Attendere...') {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            updateLoadingText(message, subText);
         }
 
-        function loadStudents() {
-            const tbody = document.getElementById('studentsTable');
-            if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nessuno studente presente. Aggiungi il primo studente o carica un file Excel!</td></tr>';
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function updateLoadingText(mainText, subText = 'Attendere...') {
+            const loadingTextEl = document.getElementById('loadingText');
+            const loadingSubtextEl = document.getElementById('loadingSubtext');
+            if (loadingTextEl) loadingTextEl.textContent = mainText;
+            if (loadingSubtextEl) loadingSubtextEl.textContent = subText;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+            } text-white`;
+            notification.style.whiteSpace = 'pre-line';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, type === 'error' ? 10000 : 5000);
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
+
+        async function login(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (email === 'admin@edu.com' && password === 'admin123') {
+                currentUser = { email, role: 'admin', name: 'Amministratore' };
+                document.getElementById('currentUser').textContent = currentUser.name;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadStudents();
+                loadCourses();
+                updateStats();
                 return;
             }
             
-            tbody.innerHTML = students.map(student => `
+            const student = allStudents.find(s => s.email.toLowerCase() === email);
+            
+            if (!student) {
+                showNotification('❌ Email non trovata', 'error');
+                return;
+            }
+            
+            if (!student.password) {
+                showNotification('⚠️ Account non attivato!\nControlla la tua email.', 'error');
+                return;
+            }
+            
+            if (student.password !== password) {
+                showNotification('❌ Password errata', 'error');
+                return;
+            }
+            
+            currentUser = { 
+                email: student.email, 
+                role: student.role || 'student', 
+                name: `${student.name} ${student.surname}`,
+                studentId: student.id
+            };
+            
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadStudents();
+                loadCourses();
+                updateStats();
+            } else {
+                document.getElementById('studentDashboard').classList.remove('hidden');
+                loadStudentCourses();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('studentDashboard').classList.add('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // ==========================================
+        // STUDENT MANAGEMENT
+        // ==========================================
+
+        function loadStudents() {
+            const tbody = document.getElementById('studentsTable');
+            if (allStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nessuno studente presente</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = allStudents.map(student => `
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 text-sm text-gray-900">${student.name} ${student.surname}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${student.email}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">${student.company}</td>
                     <td class="px-4 py-3">
-                        <select onchange="changeUserRole('${student.id}', this.value)" class="text-xs px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                        <select onchange="changeUserRole('${student.id}', this.value)" class="text-xs px-2 py-1 border border-gray-300 rounded-md">
                             <option value="student" ${(student.role || 'student') === 'student' ? 'selected' : ''}>👤 Studente</option>
                             <option value="admin" ${student.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
                         </select>
@@ -1037,15 +878,21 @@
 
         async function addStudent(event) {
             event.preventDefault();
-            const name = document.getElementById('studentName').value;
-            const surname = document.getElementById('studentSurname').value;
-            const email = document.getElementById('studentEmail').value;
-            const phone = document.getElementById('studentPhone').value;
-            const company = document.getElementById('studentCompany').value;
+
+            const name = document.getElementById('studentName').value.trim();
+            const surname = document.getElementById('studentSurname').value.trim();
+            const email = document.getElementById('studentEmail').value.trim().toLowerCase();
+            const phone = document.getElementById('studentPhone').value.trim();
+            const company = document.getElementById('studentCompany').value.trim();
             const role = document.getElementById('studentRole').value;
+
+            const duplicate = allStudents.find(s => s.email === email);
+            if (duplicate) {
+                showNotification('❌ Email già registrata!', 'error');
+                return;
+            }
             
             const newStudent = {
-                id: Date.now().toString(),
                 name,
                 surname,
                 email,
@@ -1053,65 +900,73 @@
                 company,
                 role,
                 status: 'active',
-                registrationDate: new Date().toISOString()
+                password: '',
+                registration_date: new Date().toISOString()
             };
+
+            showLoading('Salvataggio studente...');
             
-            const result = await writeToSheets('Studenti', 'create', newStudent);
-            
-            if (result) {
-                students.push(newStudent);
-                loadStudents();
-                hideModal('addStudentModal');
+            try {
+                const { data, error } = await supabase
+                    .from('students')
+                    .insert([newStudent])
+                    .select();
                 
-                showLoading('Invio email di benvenuto...');
-                const emailResult = await sendWelcomeEmail(newStudent);
+                if (error) throw error;
+                
+                const insertedStudent = data[0];
+                allStudents.unshift(insertedStudent);
+                
+                hideLoading();
+                hideModal('addStudentModal');
+                loadStudents();
+                
+                showLoading('Invio email...');
+                const emailResult = await sendWelcomeEmail(insertedStudent);
                 hideLoading();
                 
                 if (emailResult.success) {
-                    showNotification(`✅ Studente "${name} ${surname}" aggiunto!\n📧 Email inviata a ${email}`, 'success');
+                    showNotification(`✅ Studente aggiunto!\n📧 Email inviata a ${email}`, 'success');
                 } else {
-                    showNotification(`✅ Studente "${name} ${surname}" aggiunto!\n⚠️ Errore email: ${emailResult.message}`, 'success');
+                    showNotification(`✅ Studente aggiunto!\n⚠️ Errore email: ${emailResult.message}`, 'success');
                 }
                 
-                document.getElementById('studentName').value = '';
-                document.getElementById('studentSurname').value = '';
-                document.getElementById('studentEmail').value = '';
-                document.getElementById('studentPhone').value = '';
-                document.getElementById('studentCompany').value = '';
+                event.target.reset();
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
 
         async function changeUserRole(studentId, newRole) {
-            const student = students.find(s => s.id === studentId);
+            const student = allStudents.find(s => s.id === studentId);
             if (!student) return;
             
-            showLoading(`Aggiornamento ruolo a ${newRole === 'admin' ? 'Amministratore' : 'Studente'}...`);
+            showLoading('Aggiornamento ruolo...');
             
-            const updatedStudent = {
-                ...student,
-                role: newRole
-            };
-            
-            const result = await writeToSheets('Studenti', 'update', updatedStudent);
-            
-            hideLoading();
-            
-            if (result && result.status === 'success') {
-                const index = students.findIndex(s => s.id === studentId);
-                if (index !== -1) {
-                    students[index] = updatedStudent;
-                }
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .update({ role: newRole })
+                    .eq('id', studentId);
+                
+                if (error) throw error;
+                
+                student.role = newRole;
+                hideLoading();
                 
                 const roleName = newRole === 'admin' ? '👑 Amministratore' : '👤 Studente';
-                showNotification(`✅ ${student.name} ${student.surname} è ora ${roleName}`, 'success');
-            } else {
-                loadStudents();
-                showNotification('❌ Errore aggiornamento ruolo. Ricarica la pagina.', 'error');
+                showNotification(`✅ ${student.name} è ora ${roleName}`, 'success');
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
 
-        async function deleteStudent(id) {
-            const student = students.find(s => s.id === id);
+        async function deleteStudent(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
             if (!student) return;
             
             const confirmBtn = event.target;
@@ -1120,58 +975,204 @@
             confirmBtn.textContent = 'Conferma?';
             confirmBtn.classList.add('bg-red-100', 'px-2', 'py-1', 'rounded');
             
-            const confirmDelete = () => {
-                executeDelete();
-                cleanup();
-            };
-            
-            const cancelDelete = () => {
-                cleanup();
+            const executeDelete = async () => {
+                showLoading('Eliminazione...');
+                
+                try {
+                    const { error } = await supabase
+                        .from('students')
+                        .delete()
+                        .eq('id', studentId);
+                    
+                    if (error) throw error;
+                    
+                    allStudents = allStudents.filter(s => s.id !== studentId);
+                    hideLoading();
+                    loadStudents();
+                    showNotification(`✅ Studente "${student.name}" eliminato!`, 'success');
+                } catch (error) {
+                    hideLoading();
+                    showNotification('❌ Errore: ' + error.message, 'error');
+                }
             };
             
             const cleanup = () => {
                 confirmBtn.textContent = originalText;
                 confirmBtn.classList.remove('bg-red-100', 'px-2', 'py-1', 'rounded');
-                confirmBtn.removeEventListener('click', confirmDelete);
-                document.removeEventListener('click', cancelDelete);
-            };
-            
-            const executeDelete = async () => {
-                const result = await writeToSheets('Studenti', 'delete', { id });
-                
-                if (result) {
-                    students = students.filter(s => s.id !== id);
-                    loadStudents();
-                    showNotification(`✅ Studente "${student.name} ${student.surname}" eliminato!`, 'success');
-                }
             };
             
             setTimeout(() => {
-                confirmBtn.addEventListener('click', confirmDelete);
+                confirmBtn.addEventListener('click', () => {
+                    executeDelete();
+                    cleanup();
+                }, { once: true });
+                
                 setTimeout(() => {
-                    document.addEventListener('click', cancelDelete, { once: true });
+                    document.addEventListener('click', cleanup, { once: true });
                 }, 100);
             }, 0);
         }
 
+        // ==========================================
+        // EXCEL FUNCTIONS
+        // ==========================================
+
+        function downloadExcelTemplate() {
+            const wb = XLSX.utils.book_new();
+            const wsData = [
+                ['Nome', 'Cognome', 'Email', 'Telefono', 'Azienda', 'Ruolo'],
+                ['Mario', 'Rossi', 'mario.rossi@esempio.com', '3331234567', 'Azienda ABC', 'student'],
+                ['', '', '', '', '', '']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Studenti');
+            XLSX.writeFile(wb, 'template_studenti.xlsx');
+            showNotification('📥 Template scaricato!', 'success');
+        }
+
+        async function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            showLoading('Lettura file Excel...');
+            
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    hideLoading();
+                    
+                    if (jsonData.length === 0) {
+                        showNotification('⚠️ File Excel vuoto!', 'error');
+                        return;
+                    }
+                    
+                    await importStudentsFromExcel(jsonData);
+                    
+                } catch (error) {
+                    hideLoading();
+                    showNotification('❌ Errore lettura Excel: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        async function importStudentsFromExcel(excelData) {
+            showLoading(`Importazione ${excelData.length} studenti...`);
+            
+            let successCount = 0;
+            let errorCount = 0;
+            let emailsSent = 0;
+            const errors = [];
+            const importedStudents = [];
+            
+            for (let i = 0; i < excelData.length; i++) {
+                const row = excelData[i];
+                
+                if (!row.Nome || !row.Cognome || !row.Email || !row.Azienda) {
+                    errorCount++;
+                    errors.push(`Riga ${i + 2}: Campi mancanti`);
+                    continue;
+                }
+                
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(row.Email)) {
+                    errorCount++;
+                    errors.push(`Riga ${i + 2}: Email non valida`);
+                    continue;
+                }
+                
+                const duplicate = allStudents.find(s => s.email.toLowerCase() === row.Email.toLowerCase());
+                if (duplicate) {
+                    errorCount++;
+                    errors.push(`Riga ${i + 2}: Email già esistente`);
+                    continue;
+                }
+                
+                const newStudent = {
+                    name: row.Nome.trim(),
+                    surname: row.Cognome.trim(),
+                    email: row.Email.trim().toLowerCase(),
+                    phone: row.Telefono ? row.Telefono.toString().trim() : '',
+                    company: row.Azienda.trim(),
+                    role: row.Ruolo && row.Ruolo.toLowerCase() === 'admin' ? 'admin' : 'student',
+                    status: 'active',
+                    password: '',
+                    registration_date: new Date().toISOString()
+                };
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('students')
+                        .insert([newStudent])
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    const insertedStudent = data[0];
+                    allStudents.unshift(insertedStudent);
+                    importedStudents.push(insertedStudent);
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`Riga ${i + 2}: ${error.message}`);
+                }
+            }
+            
+            if (importedStudents.length > 0) {
+                showLoading(`Invio email a ${importedStudents.length} studenti...`);
+                
+                for (const student of importedStudents) {
+                    const emailResult = await sendWelcomeEmail(student);
+                    if (emailResult.success) emailsSent++;
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
+            hideLoading();
+            loadStudents();
+            
+            let message = `✅ Importazione completata!\n\n`;
+            message += `✔️ Studenti importati: ${successCount}\n`;
+            message += `📧 Email inviate: ${emailsSent}\n`;
+            if (errorCount > 0) {
+                message += `❌ Errori: ${errorCount}\n\n`;
+                message += errors.slice(0, 5).join('\n');
+            }
+            
+            showNotification(message, successCount > 0 ? 'success' : 'error');
+        }
+
+        // ==========================================
+        // COURSE MANAGEMENT
+        // ==========================================
+
         function loadCourses() {
             const container = document.getElementById('coursesList');
-            if (courses.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Nessun corso presente. Crea il primo corso!</p>';
+            if (allCourses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Nessun corso presente</p>';
                 return;
             }
             
-            container.innerHTML = courses.map(course => `
+            container.innerHTML = allCourses.map(course => `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start">
                         <div>
                             <h4 class="font-semibold text-gray-800">${course.title}</h4>
-                            <p class="text-sm text-gray-600 mt-1">${course.description}</p>
+                            <p class="text-sm text-gray-600 mt-1">${course.description || ''}</p>
                             <div class="flex items-center space-x-4 mt-2">
                                 <span class="text-xs px-2 py-1 rounded-full ${course.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                    ${course.status === 'published' ? '✅ Pubblicato' : '�� Bozza'}
+                                    ${course.status === 'published' ? '✅ Pubblicato' : '📝 Bozza'}
                                 </span>
-                                ${course.hasTest === 'true' || course.hasTest === true ? '<span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Con Test</span>' : ''}
+                                ${course.has_test ? '<span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Con Test</span>' : ''}
                             </div>
                         </div>
                         <button onclick="deleteCourse('${course.id}')" class="text-red-600 hover:text-red-800 text-sm">Elimina</button>
@@ -1182,37 +1183,48 @@
 
         async function addCourse(event) {
             event.preventDefault();
-            const title = document.getElementById('courseTitle').value;
-            const description = document.getElementById('courseDescription').value;
+            
+            const title = document.getElementById('courseTitle').value.trim();
+            const description = document.getElementById('courseDescription').value.trim();
             const hasTest = document.getElementById('courseHasTest').checked;
             
             const newCourse = {
-                id: Date.now().toString(),
                 title,
                 description,
-                hasTest: hasTest.toString(),
+                has_test: hasTest,
                 status: 'published',
-                modules: '[]',
-                createdDate: new Date().toISOString(),
-                createdBy: currentUser.name
+                created_date: new Date().toISOString(),
+                created_by: currentUser.name
             };
+
+            showLoading('Creazione corso...');
             
-            const result = await writeToSheets('Corsi', 'create', newCourse);
-            
-            if (result) {
-                courses.push(newCourse);
-                loadCourses();
+            try {
+                const { data, error } = await supabase
+                    .from('courses')
+                    .insert([newCourse])
+                    .select();
+                
+                if (error) throw error;
+                
+                const insertedCourse = data[0];
+                allCourses.unshift(insertedCourse);
+                
+                hideLoading();
                 hideModal('addCourseModal');
+                loadCourses();
                 showNotification(`✅ Corso "${title}" creato!`, 'success');
                 
-                document.getElementById('courseTitle').value = '';
-                document.getElementById('courseDescription').value = '';
-                document.getElementById('courseHasTest').checked = false;
+                event.target.reset();
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
 
-        async function deleteCourse(id) {
-            const course = courses.find(c => c.id === id);
+        async function deleteCourse(courseId) {
+            const course = allCourses.find(c => c.id === courseId);
             if (!course) return;
             
             const confirmBtn = event.target;
@@ -1221,74 +1233,92 @@
             confirmBtn.textContent = 'Conferma?';
             confirmBtn.classList.add('bg-red-100', 'px-2', 'py-1', 'rounded');
             
-            const confirmDelete = () => {
-                executeDelete();
-                cleanup();
-            };
-            
-            const cancelDelete = () => {
-                cleanup();
+            const executeDelete = async () => {
+                showLoading('Eliminazione...');
+                
+                try {
+                    const { error } = await supabase
+                        .from('courses')
+                        .delete()
+                        .eq('id', courseId);
+                    
+                    if (error) throw error;
+                    
+                    allCourses = allCourses.filter(c => c.id !== courseId);
+                    hideLoading();
+                    loadCourses();
+                    showNotification(`✅ Corso eliminato!`, 'success');
+                } catch (error) {
+                    hideLoading();
+                    showNotification('❌ Errore: ' + error.message, 'error');
+                }
             };
             
             const cleanup = () => {
                 confirmBtn.textContent = originalText;
                 confirmBtn.classList.remove('bg-red-100', 'px-2', 'py-1', 'rounded');
-                confirmBtn.removeEventListener('click', confirmDelete);
-                document.removeEventListener('click', cancelDelete);
-            };
-            
-            const executeDelete = async () => {
-                const result = await writeToSheets('Corsi', 'delete', { id });
-                
-                if (result) {
-                    courses = courses.filter(c => c.id !== id);
-                    loadCourses();
-                    showNotification(`✅ Corso "${course.title}" eliminato!`, 'success');
-                }
             };
             
             setTimeout(() => {
-                confirmBtn.addEventListener('click', confirmDelete);
+                confirmBtn.addEventListener('click', () => {
+                    executeDelete();
+                    cleanup();
+                }, { once: true });
+                
                 setTimeout(() => {
-                    document.addEventListener('click', cancelDelete, { once: true });
+                    document.addEventListener('click', cleanup, { once: true });
                 }, 100);
             }, 0);
         }
 
-        function updateStats() {
-            document.getElementById('totalStudents').textContent = students.length;
-            document.getElementById('totalCourses').textContent = courses.filter(c => c.status === 'published').length;
+        // ==========================================
+        // ADMIN TABS & STATS
+        // ==========================================
+
+        function showAdminTab(tab) {
+            document.getElementById('studentsSection').classList.add('hidden');
+            document.getElementById('coursesSection').classList.add('hidden');
+            document.getElementById('reportsSection').classList.add('hidden');
+            document.getElementById('settingsSection').classList.add('hidden');
             
-            const completions = progressData.filter(p => p.completed === 'true' || p.completed === true).length;
-            document.getElementById('totalCompletions').textContent = completions;
+            document.getElementById('studentsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
+            document.getElementById('coursesTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
+            document.getElementById('reportsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
+            document.getElementById('settingsTab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-800';
+            
+            document.getElementById(tab + 'Section').classList.remove('hidden');
+            document.getElementById(tab + 'Tab').className = 'flex-1 py-2 px-4 rounded-md font-medium transition-colors bg-white text-green-600 shadow-sm';
+            
+            if (tab === 'reports') {
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalStudents').textContent = allStudents.length;
+            document.getElementById('totalCourses').textContent = allCourses.filter(c => c.status === 'published').length;
+            document.getElementById('totalCompletions').textContent = allProgress.filter(p => p.completed === true).length;
         }
 
         // ==========================================
-        // STUDENT FUNCTIONS
+        // STUDENT DASHBOARD
         // ==========================================
-        async function loadStudentCourses() {
+
+        function loadStudentCourses() {
             const container = document.getElementById('studentCoursesList');
             
-            if (courses.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-12">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-gray-400 text-2xl">📚</span>
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-600 mb-2">Nessun corso disponibile</h3>
-                        <p class="text-gray-500">Al momento non ci sono corsi pubblicati.</p>
-                    </div>
-                `;
+            if (allCourses.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500">Nessun corso disponibile</p></div>';
                 return;
             }
             
-            const publishedCourses = courses.filter(c => c.status === 'published');
+            const publishedCourses = allCourses.filter(c => c.status === 'published');
             
             container.innerHTML = publishedCourses.map(course => `
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">${course.title}</h3>
-                    <p class="text-sm text-gray-600 mb-4">${course.description}</p>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <p class="text-sm text-gray-600 mb-4">${course.description || ''}</p>
+                    <button class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
                         Inizia Corso
                     </button>
                 </div>
@@ -1296,102 +1326,87 @@
         }
 
         // ==========================================
-        // MODAL FUNCTIONS
+        // ACCOUNT ACTIVATION
         // ==========================================
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-        }
 
-        function hideModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-        }
-
-        // ==========================================
-        // ACCOUNT ACTIVATION FUNCTIONS
-        // ==========================================
-        
-        // Decodifica token attivazione
         function decodeActivationToken(token) {
             try {
                 const decoded = atob(token);
                 const [studentId, email, timestamp] = decoded.split('-');
                 return { studentId, email, timestamp: parseInt(timestamp) };
             } catch (error) {
-                console.error('Errore decodifica token:', error);
                 return null;
             }
         }
-        
-        // Verifica ed elabora link attivazione
+
         async function checkActivationLink() {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
             const token = urlParams.get('token');
+            const studentId = urlParams.get('id');
             
-            console.log('🔍 Controllo URL - action:', action, 'token:', token ? 'presente' : 'assente');
+            console.log('🔍 Checking activation link:', { action, hasToken: !!token, hasId: !!studentId });
             
-            if (action === 'activate' && token) {
-                console.log('✅ Link di attivazione rilevato!');
+            if (action === 'activate' && token && studentId) {
                 showLoading('Verifica link di attivazione...');
                 
                 const tokenData = decodeActivationToken(token);
                 
                 if (!tokenData) {
                     hideLoading();
-                    showNotification('❌ Link di attivazione non valido', 'error');
+                    showNotification('❌ Link non valido', 'error');
                     return;
                 }
                 
-                console.log('📝 Token decodificato:', tokenData);
-                
-                // Verifica se il token è scaduto (24 ore)
                 const hoursPassed = (Date.now() - tokenData.timestamp) / (1000 * 60 * 60);
                 if (hoursPassed > 24) {
                     hideLoading();
-                    showNotification('⏰ Link di attivazione scaduto (valido 24 ore)', 'error');
+                    showNotification('⏰ Link scaduto (24 ore)', 'error');
                     return;
                 }
                 
-                // Carica i dati degli studenti
-                console.log('📥 Caricamento dati studenti...');
-                await loadAllData();
-                
-                // Trova lo studente
-                const student = students.find(s => s.email === tokenData.email);
-                console.log('👤 Studente trovato:', student ? 'SI' : 'NO');
-                
-                if (!student) {
+                try {
+                    const { data: students, error } = await supabase
+                        .from('students')
+                        .select('*')
+                        .eq('id', studentId)
+                        .single();
+                    
+                    if (error || !students) {
+                        hideLoading();
+                        showNotification('❌ Studente non trovato nel database', 'error');
+                        console.error('Errore caricamento studente:', error);
+                        return;
+                    }
+                    
+                    const student = students;
+                    
+                    if (student.password) {
+                        hideLoading();
+                        showNotification('⚠️ Account già attivato! Puoi fare il login.', 'success');
+                        document.getElementById('loginEmail').value = student.email;
+                        return;
+                    }
+                    
                     hideLoading();
-                    showNotification('❌ Studente non trovato', 'error');
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('activationScreen').classList.remove('hidden');
+                    document.getElementById('activationEmail').textContent = student.email;
+                    document.getElementById('activationName').textContent = `${student.name} ${student.surname}`;
+                    
+                    window.activatingStudent = student;
+                    console.log('✅ Schermata attivazione mostrata per:', student.email);
                     return;
-                }
-                
-                if (student.password) {
+                    
+                } catch (error) {
                     hideLoading();
-                    showNotification('⚠️ Account già attivato! Usa le tue credenziali per accedere.', 'error');
+                    showNotification('❌ Errore caricamento dati: ' + error.message, 'error');
+                    console.error('Errore:', error);
                     return;
                 }
-                
-                hideLoading();
-                
-                // Mostra schermata attivazione
-                console.log('🔐 Mostra schermata attivazione');
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('activationScreen').classList.remove('hidden');
-                document.getElementById('activationEmail').textContent = student.email;
-                document.getElementById('activationName').textContent = `${student.name} ${student.surname}`;
-                
-                // Salva dati studente in variabile globale temporanea
-                window.activatingStudent = student;
-                window.activationToken = token;
-                
-                console.log('✅ Schermata attivazione mostrata correttamente!');
-            } else {
-                console.log('ℹ️ Nessun link di attivazione nell\'URL');
             }
         }
-        
-        // Attiva account con nuova password
+
         async function activateAccount(event) {
             event.preventDefault();
             
@@ -1404,75 +1419,72 @@
             }
             
             if (newPassword.length < 8) {
-                showNotification('❌ La password deve contenere almeno 8 caratteri', 'error');
+                showNotification('❌ Password minimo 8 caratteri', 'error');
                 return;
             }
             
             if (!window.activatingStudent) {
-                showNotification('❌ Errore: dati studente non trovati', 'error');
+                showNotification('❌ Errore dati studente', 'error');
                 return;
             }
             
-            showLoading('Attivazione account in corso...');
+            showLoading('Attivazione account...');
             
-            // Aggiorna studente con password
-            const updatedStudent = {
-                ...window.activatingStudent,
-                password: newPassword,
-                status: 'active',
-                activatedDate: new Date().toISOString()
-            };
-            
-            const result = await writeToSheets('Studenti', 'update', updatedStudent);
-            
-            hideLoading();
-            
-            if (result && result.status === 'success') {
-                // Aggiorna array locale
-                const index = students.findIndex(s => s.id === updatedStudent.id);
-                if (index !== -1) {
-                    students[index] = updatedStudent;
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .update({
+                        password: newPassword,
+                        status: 'active'
+                    })
+                    .eq('id', window.activatingStudent.id);
+                
+                if (error) throw error;
+                
+                const studentIndex = allStudents.findIndex(s => s.id === window.activatingStudent.id);
+                if (studentIndex !== -1) {
+                    allStudents[studentIndex].password = newPassword;
+                    allStudents[studentIndex].status = 'active';
                 }
                 
-                // Pulisci variabili temporanee
                 delete window.activatingStudent;
-                delete window.activationToken;
-                
-                // Rimuovi parametri URL
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
-                showNotification('✅ Account attivato con successo! Ora puoi accedere.', 'success');
+                hideLoading();
+                showNotification('✅ Account attivato! Ora puoi accedere.', 'success');
                 
-                // Torna al login dopo 2 secondi
                 setTimeout(() => {
                     document.getElementById('activationScreen').classList.add('hidden');
                     document.getElementById('loginScreen').classList.remove('hidden');
-                    document.getElementById('loginEmail').value = updatedStudent.email;
+                    document.getElementById('loginEmail').value = allStudents[studentIndex].email;
                 }, 2000);
-            } else {
-                showNotification('❌ Errore durante l\'attivazione. Riprova.', 'error');
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore: ' + error.message, 'error');
             }
         }
 
         // ==========================================
         // INITIALIZATION
         // ==========================================
+
         document.addEventListener('DOMContentLoaded', async function() {
-            showAdminTab('students');
-            console.log('🚀 Piattaforma caricata');
-            console.log('🔗 Google Sheets URL:', GOOGLE_SHEETS_URL);
+            console.log('🚀 Avvio EduPlatform...');
             
-            // CARICA AUTOMATICAMENTE I DATI ANCHE PRIMA DEL LOGIN (per test)
-            console.log('📥 Caricamento automatico dati...');
-            await loadAllData().then(() => {
-                console.log('✅ Dati caricati automaticamente');
-            }).catch(err => {
-                console.error('❌ Errore caricamento automatico:', err);
-            });
+            const supabaseReady = await initSupabase();
             
-            // Verifica se c'è un link di attivazione
-            await checkActivationLink();
+            if (!supabaseReady) {
+                console.log('⚠️ Supabase non configurato');
+                return;
+            }
+            
+            await loadEmailJSConfig();
+            
+            checkActivationLink();
+            
+            console.log('✅ Piattaforma pronta!');
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a51c863a52bbaf1',t:'MTc2NDI0ODE1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a537d87018eee95',t:'MTc2NDI2NjA2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
