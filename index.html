@@ -279,8 +279,12 @@
           </div>
          </div>
         </div>
-        <div><label for="certPlatformLogo" class="block text-sm font-medium text-gray-700 mb-2">Logo Piattaforma (sinistra del certificato)</label> <input type="url" id="certPlatformLogo" placeholder="https://esempio.com/logo-piattaforma.png" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        <div><label for="certPlatformLogo" class="block text-sm font-medium text-gray-700 mb-2">Logo Piattaforma (sinistra del certificato)</label>
+         <div class="flex space-x-2"><input type="url" id="certPlatformLogo" placeholder="https://esempio.com/logo.png o carica file" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"> <button type="button" onclick="document.getElementById('platformLogoFile').click()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg whitespace-nowrap"> 📤 Carica File </button>
+         </div><input type="file" id="platformLogoFile" accept="image/*" onchange="handlePlatformLogoUpload(event)" class="hidden">
          <p class="text-xs text-gray-500 mt-1">Formato consigliato: PNG trasparente, max 200x100px. Apparirà in alto a sinistra.</p>
+         <div id="platformLogoPreview" class="mt-2 hidden"><img id="platformLogoPreviewImg" class="h-16 border border-gray-200 rounded">
+         </div>
         </div>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
          <p class="text-sm text-blue-900 font-medium mb-2">📝 Nota sui Loghi Aziendali</p>
@@ -361,8 +365,12 @@
       </div>
       <div><label for="studentCompany" class="block text-sm font-medium text-gray-700 mb-1">Azienda</label> <input type="text" id="studentCompany" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
       </div>
-      <div><label for="studentCompanyLogo" class="block text-sm font-medium text-gray-700 mb-1">Logo Azienda (URL)</label> <input type="url" id="studentCompanyLogo" placeholder="https://esempio.com/logo.png" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+      <div><label for="studentCompanyLogo" class="block text-sm font-medium text-gray-700 mb-1">Logo Azienda</label>
+       <div class="flex space-x-2"><input type="url" id="studentCompanyLogo" placeholder="https://esempio.com/logo.png o carica file" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"> <button type="button" onclick="document.getElementById('companyLogoFile').click()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg whitespace-nowrap text-sm"> 📤 Carica </button>
+       </div><input type="file" id="companyLogoFile" accept="image/*" onchange="handleCompanyLogoUpload(event)" class="hidden">
        <p class="text-xs text-gray-500 mt-1">Opzionale - Apparirà nel certificato</p>
+       <div id="companyLogoPreview" class="mt-2 hidden"><img id="companyLogoPreviewImg" class="h-12 border border-gray-200 rounded">
+       </div>
       </div>
       <div><label for="studentRole" class="block text-sm font-medium text-gray-700 mb-1">Ruolo</label> <select id="studentRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"> <option value="student">👤 Studente</option> <option value="admin">👑 Amministratore</option> </select>
       </div>
@@ -961,6 +969,91 @@ CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
         }
 
         // ==========================================
+        // IMAGE UPLOAD HELPERS
+        // ==========================================
+
+        function convertImageToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handlePlatformLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showNotification('⚠️ Seleziona un file immagine valido', 'error');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('⚠️ Immagine troppo grande (max 2MB)', 'error');
+                return;
+            }
+            
+            showLoading('Caricamento logo...');
+            
+            try {
+                const base64 = await convertImageToBase64(file);
+                document.getElementById('certPlatformLogo').value = base64;
+                
+                // Mostra anteprima
+                const preview = document.getElementById('platformLogoPreview');
+                const previewImg = document.getElementById('platformLogoPreviewImg');
+                previewImg.src = base64;
+                preview.classList.remove('hidden');
+                
+                hideLoading();
+                showNotification('✅ Logo caricato!', 'success');
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore caricamento: ' + error.message, 'error');
+            }
+            
+            event.target.value = '';
+        }
+
+        async function handleCompanyLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showNotification('⚠️ Seleziona un file immagine valido', 'error');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('⚠️ Immagine troppo grande (max 2MB)', 'error');
+                return;
+            }
+            
+            showLoading('Caricamento logo...');
+            
+            try {
+                const base64 = await convertImageToBase64(file);
+                document.getElementById('studentCompanyLogo').value = base64;
+                
+                // Mostra anteprima
+                const preview = document.getElementById('companyLogoPreview');
+                const previewImg = document.getElementById('companyLogoPreviewImg');
+                previewImg.src = base64;
+                preview.classList.remove('hidden');
+                
+                hideLoading();
+                showNotification('✅ Logo caricato!', 'success');
+            } catch (error) {
+                hideLoading();
+                showNotification('❌ Errore caricamento: ' + error.message, 'error');
+            }
+            
+            event.target.value = '';
+        }
+
+        // ==========================================
         // CERTIFICATE CUSTOMIZATION
         // ==========================================
 
@@ -991,6 +1084,14 @@ CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
                 document.getElementById('certSecondaryColor').value = certificateConfig.secondaryColor;
                 document.getElementById('certSecondaryColorHex').value = certificateConfig.secondaryColor;
                 document.getElementById('certPlatformLogo').value = certificateConfig.platformLogo || '';
+                
+                // Mostra anteprima logo se presente
+                if (certificateConfig.platformLogo) {
+                    const preview = document.getElementById('platformLogoPreview');
+                    const previewImg = document.getElementById('platformLogoPreviewImg');
+                    previewImg.src = certificateConfig.platformLogo;
+                    preview.classList.remove('hidden');
+                }
                 
                 // Sincronizza color picker con hex input
                 document.getElementById('certPrimaryColor').addEventListener('input', (e) => {
@@ -2865,7 +2966,7 @@ CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
             
             const mediaIcons = {
                 video: '🎥',
-                pdf: '📄',
+                pdf: '���',
                 link: '🔗',
                 text: '📝'
             };
@@ -3168,5 +3269,5 @@ CREATE INDEX idx_enrollments_course ON enrollments(course_id);</code></pre>
             console.log('✅ Piattaforma pronta!');
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a6aabb4077f6cbb',t:'MTc2NDUwOTEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a6ab41887b5babb',t:'MTc2NDUwOTQ2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
